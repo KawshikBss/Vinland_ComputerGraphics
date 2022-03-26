@@ -1,0 +1,8 @@
+# depslib dependency file v1.0
+1648326950 source:f:\vinland_computergraphics\vinland\main.cpp
+	<iostream>
+	<windows.h>
+	<GL/glu.h>
+	<GL/glut.h>
+	<math.h>
+
