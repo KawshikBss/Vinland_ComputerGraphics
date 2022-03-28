@@ -40,7 +40,7 @@ void sun_update(int) {
             evening = true;
         }
     }
-    if (evening) {
+    else if (evening) {
         dayTimer++;
         if (dayTimer >= FPS * 5) {
             evening = false;
@@ -48,7 +48,7 @@ void sun_update(int) {
             dayTimer = 0;
         }
     }
-    if (noon) {
+    else if (noon) {
         if (sunYPos > 0)
             sunYPos--;
         if (sunYPos == 0) {
@@ -80,23 +80,23 @@ void moon_update(int) {
     glutPostRedisplay();
     glutTimerFunc(FPS, moon_update, 0);
     if (night) {
-        if (moonYPos < HEIGHT)
+        if (moonYPos < HEIGHT - moonRadius)
             moonYPos += 2;
-        if (moonYPos == HEIGHT) {
-            //night = false;
-            //midnight = true;
+        if (moonYPos == HEIGHT - moonRadius) {
+            night = false;
+            midnight = true;
         }
     }
-    if (midnight) {
+    else if (midnight) {
         nightTimer++;
         if (nightTimer >= FPS * 5) {
-            //night = false;
-            //morning = true;
+            midnight = false;
+            morning = true;
             nightTimer = 0;
         }
     }
-    if (morning) {
-        if (moonYPos < HEIGHT + moonRadius)
+    else if (morning) {
+        if (moonYPos < HEIGHT + moonRadius && moonYPos >= HEIGHT - moonRadius)
             moonYPos += 2;
         if (moonYPos == HEIGHT + moonRadius)
             moonYPos = 0.0f;
@@ -119,37 +119,9 @@ void moon_display() {
 // bridge
 float bridgeColor[3] = {0.0f, 0.0f, 1.0f};
 float bridgeColorShade[3] = {0.85f, 0.43f, 0.58f};
-void bridge_update(int) {
-    glutPostRedisplay();
-    glutTimerFunc(FPS, bridge_update, 0);
-    if (morning) {
-        if (bridgeColor[0] < 1.0f)
-            bridgeColor[0] += 0.005f;
-        if (bridgeColor[2] > 0.0f)
-            bridgeColor[2] -= 0.005f;
-        if (bridgeColorShade[0] < 1.0f)
-            bridgeColorShade[0] += 0.005f;
-        if (bridgeColorShade[1] < 0.64f)
-            bridgeColorShade[1] += 0.005f;
-        if (bridgeColorShade[2] > 0.0f)
-            bridgeColorShade[2] -= 0.005f;
-    }
-    if (noon && sunYPos <= HEIGHT / 2.0f) {
-        if (bridgeColor[0] > 0.0f)
-            bridgeColor[0] -= 0.005f;
-        if (bridgeColor[2] < 1.0f)
-            bridgeColor[2] += 0.005f;
-        if (bridgeColorShade[0] > 0.85f)
-            bridgeColorShade[0] -= 0.005f;
-        if (bridgeColorShade[1] > 0.43f)
-            bridgeColorShade[1] -= 0.005f;
-        if (bridgeColorShade[2] < 0.58f)
-            bridgeColorShade[2] += 0.005f;
-    }
-}
 
 // bridge horizon
-GLfloat bridgeHorizonX = - WIDTH, bridgeHorizonY = HEIGHT / 5.0f;
+GLfloat bridgeHorizonX = - WIDTH, bridgeHorizonY = HEIGHT / 5.0f + 100.0f;
 GLfloat bridgeHorizonWidth = WIDTH, bridgeHorizonHeight = 20.0f;
 void bridge_horizon_display(){
     glBegin(GL_POLYGON);
@@ -164,7 +136,7 @@ void bridge_horizon_display(){
 // bridge legs
 int bridgeLegCount = 4;
 float bridgeLegGap = bridgeHorizonWidth / bridgeLegCount;
-GLfloat bridgeLegXStart = - WIDTH, bridgeLegY = 0;
+GLfloat bridgeLegXStart = - WIDTH, bridgeLegY = 100.f;
 GLfloat bridgeLegWidth = 50.0f, bridgeLegHeight = HEIGHT / 2.0f;
 void bridge_legs_display() {
     for (int i = 0; i < bridgeLegCount; i++) {
@@ -210,8 +182,65 @@ void bridge_arches_display() {
     }
 }
 
+// bridge cars
+int carCount = 2;
+float carWidth = 40.0f, carHeight = 20.0f;
+GLfloat carsPos[2][2] = {{bridgeHorizonX - carWidth, bridgeHorizonY + bridgeHorizonHeight},
+                                {0.0f + carWidth, bridgeHorizonY + bridgeHorizonHeight}};
+
+void bridge_car_update() {
+    if (carsPos[0][0] < carWidth)
+        carsPos[0][0]++;
+    if (carsPos[1][0] > bridgeHorizonX - carWidth)
+        carsPos[1][0]--;
+}
+// TODO
+void bridge_car_display() {
+    for (int i = 0; i < carCount; i++) {
+        glColor3f(0.0f, 0.0f, 1.0f);
+        glBegin(GL_POLYGON);
+        glVertex2f(carsPos[i][0], carsPos[i][1]);
+        glVertex2f(carsPos[i][0] + carWidth, carsPos[i][1]);
+        glVertex2f(carsPos[i][0] + carWidth / 2.0f, carsPos[i][1]);
+        glVertex2f(carsPos[i][0] + carWidth / 2.0f, carsPos[i][1] + carHeight);
+        glVertex2f(carsPos[i][0] + carWidth, carsPos[i][1] + carHeight);
+        glVertex2f(carsPos[i][0], carsPos[i][1] + carHeight);
+        glEnd();
+    }
+}
+
+void bridge_update(int) {
+    glutPostRedisplay();
+    glutTimerFunc(FPS, bridge_update, 0);
+    bridge_car_update();
+    if (morning) {
+        if (bridgeColor[0] < 1.0f)
+            bridgeColor[0] += 0.005f;
+        if (bridgeColor[2] > 0.0f)
+            bridgeColor[2] -= 0.005f;
+        if (bridgeColorShade[0] < 1.0f)
+            bridgeColorShade[0] += 0.005f;
+        if (bridgeColorShade[1] < 0.64f)
+            bridgeColorShade[1] += 0.005f;
+        if (bridgeColorShade[2] > 0.0f)
+            bridgeColorShade[2] -= 0.005f;
+    }
+    if (noon && sunYPos <= HEIGHT / 2.0f) {
+        if (bridgeColor[0] > 0.0f)
+            bridgeColor[0] -= 0.005f;
+        if (bridgeColor[2] < 1.0f)
+            bridgeColor[2] += 0.005f;
+        if (bridgeColorShade[0] > 0.85f)
+            bridgeColorShade[0] -= 0.005f;
+        if (bridgeColorShade[1] > 0.43f)
+            bridgeColorShade[1] -= 0.005f;
+        if (bridgeColorShade[2] < 0.58f)
+            bridgeColorShade[2] += 0.005f;
+    }
+}
 
 void bridge_display() {
+    bridge_car_display();
     bridge_arches_display();
     bridge_horizon_display();
     bridge_legs_display();
@@ -229,8 +258,10 @@ int main(int argc, char **argv) {
 }
 
 void update() {
-    glutTimerFunc(FPS, moon_update, 0);
-    glutTimerFunc(FPS, sun_update, 0);
+    if (night || midnight)
+        glutTimerFunc(FPS, moon_update, 0);
+    if (morning || noon || evening)
+        glutTimerFunc(FPS, sun_update, 0);
     glutTimerFunc(FPS, bridge_update, 0);
 }
 
@@ -238,8 +269,10 @@ void display() {
     glClear(GL_COLOR_BUFFER_BIT);
     glLoadIdentity();
     glClearColor(0.0f, 1.0f, 1.0f, 1.0f);
-    moon_display();
-    sun_display();
+    if (night || midnight)
+        moon_display();
+    if (morning || noon || evening)
+        sun_display();
     bridge_display();
     glFlush();
 }
