@@ -21,13 +21,47 @@ bool morning = true;
 bool evening = false;
 bool noon = false;
 bool night = false;
-bool midnight = true;
+bool midnight = false;
 
 // sun
 GLfloat sunXPos = - WIDTH / 2.0f, sunYPos = 0.0f;
 float sunAngle, sunSegments = 100.0f, sunRadius = 100.0f;
 float sunColor[3] = {1.0f, 0.64f, 0.0f};
 float sunColorShade[3] = {1.0f, 1.0f, 0.0f};
+
+// sky
+GLfloat skyColor[3] = {0.0f, 0.4f, 0.6f};
+GLfloat skyColorShade[3] = {0.9f, 0.9f, 1.0f};
+GLfloat skyXPos = - WIDTH, skyYPos = HEIGHT, skyWidth = 2 * WIDTH, skyHeight = HEIGHT;
+void sky_update(int) {
+    glutPostRedisplay();
+    glutTimerFunc(FPS, sky_update, 0);
+    if (morning) {
+        if (skyColor[1] < 0.4f)
+            skyColor[1] += 0.01f;
+        if (skyColor[2] < 0.6f)
+            skyColor[2] += 0.01f;
+    }
+    else if (noon && sunYPos <= HEIGHT / 2.0f) {
+        if (skyColor[1] > 0.1f)
+            skyColor[1] -= 0.01f;
+        if (skyColor[2] > 0.1f)
+            skyColor[2] -= 0.01f;
+    }
+}
+
+void sky_display() {
+    glBegin(GL_POLYGON);
+    glColor3f(skyColor[0], skyColor[1], skyColor[2]);
+    glVertex2f(skyXPos, skyYPos);
+    glVertex2f(skyXPos + skyWidth, skyYPos);
+    glColor3f(skyColorShade[0], skyColorShade[1], skyColorShade[2]);
+    glVertex2f(skyXPos + skyWidth, skyYPos - skyHeight);
+    glVertex2f(skyXPos, skyYPos - skyHeight);
+    glEnd();
+}
+
+// sun functions
 
 void sun_update(int) {
     glutPostRedisplay();
@@ -59,12 +93,15 @@ void sun_update(int) {
 }
 
 void sun_display() {
+    GLfloat sunColorTmp[3];
+    sunColorTmp[0] = sunColor[0];
+    sunColorTmp[1] = sunColor[1];
+    sunColorTmp[2] = sunColor[2];
     glBegin(GL_POLYGON);
     for (int i = 0; i <= sunSegments; i++) {
-        if (i % 2 == 0)
-            glColor3f(sunColor[0], sunColor[1], sunColor[2]);
-        else
-            glColor3f(sunColorShade[0], sunColorShade[1], sunColorShade[2]);
+        if (sunColorTmp[1] < sunColorShade[1])
+            sunColorTmp[1] += 0.05f;
+        glColor3f(sunColorTmp[0], sunColorTmp[1], sunColorTmp[2]);
         sunAngle = 2.0f * 3.141615f * i / sunSegments;
         glVertex2f((sunRadius * cosf(sunAngle)) + sunXPos, (sunRadius * sinf(sunAngle)) + sunYPos);
     }
@@ -105,14 +142,20 @@ void moon_update(int) {
 
 void moon_display() {
     glBegin(GL_POLYGON);
-    for (int i = 0; i <= moonSegments; i++) {
-        if (i % 2 == 0)
-            glColor3f(moonColor[0], moonColor[1], moonColor[2]);
-        else
-            glColor3f(moonColorShade[0], moonColorShade[1], moonColorShade[2]);
+    for (int i = moonSegments / 3.5f; i <= moonSegments; i++) {
+        glColor3f(moonColor[0], moonColor[1], moonColor[2]);
         moonAngle = 2.0f * 3.141615f * i / moonSegments;
         glVertex2f((moonRadius * cosf(moonAngle)) + moonXPos, (moonRadius * sinf(moonAngle)) + moonYPos);
     }
+    glEnd();
+    glBegin(GL_POLYGON);
+    for (int i = moonSegments / 3.0f; i <= moonSegments; i++) {
+        glColor3f(skyColor[0], skyColor[1], skyColor[2]);
+        moonAngle = 2.0f * 3.141615f * i / moonSegments;
+        glVertex2f((moonRadius * cosf(moonAngle)) + moonXPos + (moonRadius / 2.0f), (moonRadius * sinf(moonAngle)) + moonYPos + (moonRadius / 2.0f));
+
+    }
+        //glVertex2f(moonXPos - 100.0f, moonYPos);
     glEnd();
 }
 
@@ -258,10 +301,9 @@ int main(int argc, char **argv) {
 }
 
 void update() {
-    if (night || midnight)
-        glutTimerFunc(FPS, moon_update, 0);
-    if (morning || noon || evening)
-        glutTimerFunc(FPS, sun_update, 0);
+    glutTimerFunc(FPS, sky_update, 0);
+    glutTimerFunc(FPS, moon_update, 0);
+    glutTimerFunc(FPS, sun_update, 0);
     glutTimerFunc(FPS, bridge_update, 0);
 }
 
@@ -269,6 +311,7 @@ void display() {
     glClear(GL_COLOR_BUFFER_BIT);
     glLoadIdentity();
     glClearColor(0.0f, 1.0f, 1.0f, 1.0f);
+    sky_display();
     if (night || midnight)
         moon_display();
     if (morning || noon || evening)
