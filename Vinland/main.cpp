@@ -141,21 +141,22 @@ void moon_update(int) {
 }
 
 void moon_display() {
+    GLfloat moonColorTmp[3];
+    moonColorTmp[0] = moonColor[0];
+    moonColorTmp[1] = moonColor[1];
+    moonColorTmp[2] = moonColor[2];
     glBegin(GL_POLYGON);
-    for (int i = moonSegments / 3.5f; i <= moonSegments; i++) {
-        glColor3f(moonColor[0], moonColor[1], moonColor[2]);
+    for (int i = 0; i <= moonSegments; i++) {
+        if (moonColorTmp[0] > moonColorShade[0])
+            moonColorTmp[0] -= 0.01f;
+        if (moonColorTmp[1] > moonColorShade[1])
+            moonColorTmp[1] -= 0.01f;
+        if (moonColorTmp[2] > moonColorShade[2])
+            moonColorTmp[2] -= 0.01f;
+        glColor3f(moonColorTmp[0], moonColorTmp[1], moonColorTmp[2]);
         moonAngle = 2.0f * 3.141615f * i / moonSegments;
         glVertex2f((moonRadius * cosf(moonAngle)) + moonXPos, (moonRadius * sinf(moonAngle)) + moonYPos);
     }
-    glEnd();
-    glBegin(GL_POLYGON);
-    for (int i = moonSegments / 3.0f; i <= moonSegments; i++) {
-        glColor3f(skyColor[0], skyColor[1], skyColor[2]);
-        moonAngle = 2.0f * 3.141615f * i / moonSegments;
-        glVertex2f((moonRadius * cosf(moonAngle)) + moonXPos + (moonRadius / 2.0f), (moonRadius * sinf(moonAngle)) + moonYPos + (moonRadius / 2.0f));
-
-    }
-        //glVertex2f(moonXPos - 100.0f, moonYPos);
     glEnd();
 }
 
