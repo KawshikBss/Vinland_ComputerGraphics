@@ -3,6 +3,7 @@
 #include <GL/glu.h>
 #include <GL/glut.h>
 #include <math.h>
+#include <vector>
 
 using namespace std;
 
@@ -288,6 +289,39 @@ void bridge_display() {
     bridge_arches_display();
     bridge_horizon_display();
     bridge_legs_display();
+}
+
+// tree
+GLfloat treeStartXpos = - WIDTH / 2.0f, treeStartYpos = - HEIGHT / 2.0f;
+GLfloat treeTrunkHeight = 250.0f;
+GLfloat treeGrowthRate = 0.1f;
+GLfloat treeBranchArea[4];
+treeBranchArea[0] = treeStartXpos + 250.0f;;
+treeBranchArea[1] = treeStartYpos + treeTrunkHeight;
+treeBranchArea[2] = treeStartXpos - 250.f;
+treeBranchArea[3] = treeStartXpos + (2 * treeTrunkHeight);
+GLfloat treeColor[3] = {0.36f, 0.25f, 0.2f};
+int growthTimer = 0;
+
+vector<vector<GLfloat>> treePositions = {
+    {treeStartXpos, treeStartYpos}
+};
+
+void add_tree_branch() {
+    if (treePositions.size() == 1) {
+        for (float xPos = treeStartXpos, float yPos = treeStartYpos; yPos <= treeTrunkHeight; yPos += treeGrowthRate) {
+            vector<GLfloat> tmp = {xPos, yPos};
+            treePositions.push_back(tmp);
+        }
+    }
+}
+
+void tree_update(int) {
+    glutPostRedisplay();
+    glutTimerFunc(FPS, tree_update, 0);
+    if (growthTimer >= 200) {
+
+    }
 }
 
 int main(int argc, char **argv) {
