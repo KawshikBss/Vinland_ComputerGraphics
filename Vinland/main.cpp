@@ -219,6 +219,7 @@ void bridge_arches_display() {
         for (int j = archeSteps; j >= archeSteps / 2; j--) {
             angle = 2.0f * 3.141615f * j / archeSteps;
             glColor3f(bridgeColor[0], bridgeColor[1], bridgeColor[2]);
+            glLineWidth(4.0f);
             glBegin(GL_LINES);
             glVertex2f((radius * cosf(angle) + centerX), (radius * sinf(angle) + centerY));
             glVertex2f((radius * cosf(angle) + centerX), bridgeHorizonY);
@@ -293,35 +294,42 @@ void bridge_display() {
 
 // tree
 GLfloat treeStartXpos = - WIDTH / 2.0f, treeStartYpos = - HEIGHT / 2.0f;
-GLfloat treeTrunkHeight = 250.0f;
-GLfloat treeGrowthRate = 0.1f;
-GLfloat treeBranchArea[4];
-treeBranchArea[0] = treeStartXpos + 250.0f;;
-treeBranchArea[1] = treeStartYpos + treeTrunkHeight;
-treeBranchArea[2] = treeStartXpos - 250.f;
-treeBranchArea[3] = treeStartXpos + (2 * treeTrunkHeight);
+GLfloat treeTrunkHeight = 100.0f;
+GLfloat treeGrowthRate = 1.0f;
+GLfloat treeBranchArea[4] = {treeStartXpos + 250.0f, treeStartYpos + treeTrunkHeight, treeStartXpos - 250.f, treeStartXpos + (2 * treeTrunkHeight)};
 GLfloat treeColor[3] = {0.36f, 0.25f, 0.2f};
 int growthTimer = 0;
 
-vector<vector<GLfloat>> treePositions = {
-    {treeStartXpos, treeStartYpos}
-};
+vector<vector<GLfloat> > treePositions;
 
-void add_tree_branch() {
-    if (treePositions.size() == 1) {
-        for (float xPos = treeStartXpos, float yPos = treeStartYpos; yPos <= treeTrunkHeight; yPos += treeGrowthRate) {
-            vector<GLfloat> tmp = {xPos, yPos};
-            treePositions.push_back(tmp);
-        }
+void tree_update(int) {
+    if (treePositions.empty()) {
+        vector<GLfloat> tmp;
+        tmp.push_back(treeStartXpos);
+        tmp.push_back(treeStartYpos);
+        treePositions.push_back(tmp);
+    }
+    glutPostRedisplay();
+    glutTimerFunc(FPS, tree_update, 0);
+    GLfloat lastXpos = treePositions[treePositions.size() - 1][0];
+    GLfloat lastYpos = treePositions[treePositions.size() - 1][1];
+    if (lastXpos == treePositions[0][0] && lastYpos <= treeTrunkHeight) {
+        vector<GLfloat> tmpPos;
+        tmpPos.push_back(lastXpos);
+        tmpPos.push_back(lastYpos + treeGrowthRate);
+        treePositions.push_back(tmpPos);
     }
 }
 
-void tree_update(int) {
-    glutPostRedisplay();
-    glutTimerFunc(FPS, tree_update, 0);
-    if (growthTimer >= 200) {
-
+void tree_display() {
+    glColor3f(treeColor[0], treeColor[1], treeColor[2]);
+    glLineWidth(500.0f);
+    glBegin(GL_LINES);
+    for (int i = 1; i < treePositions.size(); i++) {
+        glVertex2f(treePositions[i - 1][0], treePositions[i - 1][1]);
+        glVertex2f(treePositions[i][0], treePositions[i][1]);
     }
+    glEnd();
 }
 
 int main(int argc, char **argv) {
@@ -340,6 +348,7 @@ void update() {
     glutTimerFunc(FPS, moon_update, 0);
     glutTimerFunc(FPS, sun_update, 0);
     glutTimerFunc(FPS, bridge_update, 0);
+    glutTimerFunc(FPS, tree_update, 0);
 }
 
 void display() {
@@ -352,6 +361,7 @@ void display() {
     if (morning || noon || evening)
         sun_display();
     bridge_display();
+    tree_display();
     glFlush();
 }
 
