@@ -296,7 +296,7 @@ void bridge_display() {
 GLfloat treeStartXpos = - WIDTH / 2.0f, treeStartYpos = - HEIGHT / 2.0f;
 GLfloat treeTrunkHeight = 100.0f;
 GLfloat treeTrunkBotttomWidth = 25.0f, treeTrunkTopWidth = treeTrunkBotttomWidth;
-GLfloat treeBranchLength = 30.0f, treeBranchStartWidth = 20.0f;
+GLfloat treeBranchLength = 70.0f, treeBranchStartWidth = 20.0f;
 GLfloat treeGrowthRate = 1.0f;
 GLfloat treeBranchArea[4] = {treeStartXpos + 250.0f, treeStartYpos + treeTrunkHeight, treeStartXpos - 250.f, treeStartXpos + (2 * treeTrunkHeight)};
 GLfloat treeColor[3] = {0.36f, 0.25f, 0.2f};
@@ -328,7 +328,7 @@ void tree_update(int) {
     else {
         if (treeBranchPositions.empty()) {
             for (int i = 0; i < treePositions.size(); i++) {
-                if (i % 100 == 0 && i >= 200) {
+                if (i % 50 == 0 && i >= 200) {
                     vector<GLfloat> tmp;
                     tmp.push_back(treePositions[i][0]); // x1
                     tmp.push_back(treePositions[i][1]); // y1
@@ -339,18 +339,16 @@ void tree_update(int) {
                     tmp.push_back(treePositions[i][0]); // x4
                     tmp.push_back(treePositions[i][1] - treeBranchStartWidth); // y4
                     treeBranchPositions.push_back(tmp);
-                }
-                if (i % 150 == 0 && i >= 200) {
-                    vector<GLfloat> tmp;
-                    tmp.push_back(treePositions[i][0]); // x1
-                    tmp.push_back(treePositions[i][1]); // y1
-                    tmp.push_back(treePositions[i][0]); // x2
-                    tmp.push_back(treePositions[i][1] - treeBranchStartWidth); // y2
-                    tmp.push_back(treePositions[i][0]); // x3
-                    tmp.push_back(treePositions[i][1]); // y3
-                    tmp.push_back(treePositions[i][0]); // x4
-                    tmp.push_back(treePositions[i][1] - treeBranchStartWidth); // y4
-                    treeBranchPositions.push_back(tmp);
+                    vector<GLfloat> tmp2;
+                    tmp2.push_back(treePositions[i][0]); // x1
+                    tmp2.push_back(treePositions[i][1]); // y1
+                    tmp2.push_back(treePositions[i][0]); // x2
+                    tmp2.push_back(treePositions[i][1] - treeBranchStartWidth); // y2
+                    tmp2.push_back(treePositions[i][0]); // x3
+                    tmp2.push_back(treePositions[i][1]); // y3
+                    tmp2.push_back(treePositions[i][0]); // x4
+                    tmp2.push_back(treePositions[i][1] - treeBranchStartWidth); // y4
+                    treeBranchPositions.push_back(tmp2);
                 }
             }
         }
