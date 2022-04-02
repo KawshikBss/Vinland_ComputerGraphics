@@ -293,14 +293,17 @@ void bridge_display() {
 }
 
 // tree
-GLfloat treeStartXpos = - WIDTH / 2.0f, treeStartYpos = - HEIGHT / 2.0f;
+GLfloat treeStartXpos = - WIDTH / 1.5f, treeStartYpos = - HEIGHT / 2.0f;
 GLfloat treeTrunkHeight = 100.0f;
 GLfloat treeTrunkBotttomWidth = 25.0f, treeTrunkTopWidth = treeTrunkBotttomWidth;
 GLfloat treeBranchLength = 70.0f, treeBranchStartWidth = 20.0f;
+int treeLeafSegments = 0, treeLeafSegmentsMax = 75;
 GLfloat treeGrowthRate = 1.0f;
 GLfloat treeBranchArea[4] = {treeStartXpos + 250.0f, treeStartYpos + treeTrunkHeight, treeStartXpos - 250.f, treeStartXpos + (2 * treeTrunkHeight)};
 GLfloat treeColor[3] = {0.36f, 0.25f, 0.2f};
 GLfloat treeColorShade[3] = {0.82f, 0.49f, 0.17f};
+GLfloat treeLeafColor[3] = {0.0f, 1.0f, 0.49f};
+GLfloat treeLeafColorShade[3] = {0.23f, 0.7f, 0.44f};
 int growthTimer = 0;
 bool treeBranchesGrown = false;
 
@@ -376,10 +379,9 @@ void tree_update(int) {
                         }
                     }
                 }
-                if (treeBranchPositions[treeBranchPositions.size() - 1][7] >= treeBranchLength)
+                if (abs(treeBranchPositions[0][7] - treeBranchPositions[0][3]) >= 351)
                     treeBranchesGrown = true;
             }
-            cout << treeBranchPositions[treeBranchPositions.size() - 1][7] << endl;
         }
         if (treeBranchesGrown) {
             if (treeLeafPositions.empty()) {
@@ -420,14 +422,25 @@ void tree_branch_display() {
 
 void tree_leafs_display() {
     float leafAngle, leafRadius;
+    if (treeLeafSegments < treeLeafSegmentsMax)
+        treeLeafSegments++;
     for (int i = 0; i < treeLeafPositions.size(); i++) {
-            cout << treeLeafPositions[i][0] << " " << treeLeafPositions[i][0] << endl;
-        glColor3f(0.0f, 1.0f, 0.0f);
+        GLfloat treeLeafColorTmp[3];
+        treeLeafColorTmp[0] = treeLeafColor[0];
+        treeLeafColorTmp[1] = treeLeafColor[1];
+        treeLeafColorTmp[2] = treeLeafColor[2];
         glBegin(GL_POLYGON);
-        for (int j = 0; j < 100; j++) {
+        for (int j = 0; j < treeLeafSegments; j++) {
+            glColor3f(treeLeafColorTmp[0], treeLeafColorTmp[1], treeLeafColorTmp[2]);
             leafAngle = 2.0f * 3.141615f * j / 100;
-            leafRadius = (50 * (i + 1));
+            leafRadius = (15 * (i + 1));
             glVertex2f((leafRadius * cosf(leafAngle)) + treeLeafPositions[i][0], (leafRadius * sinf(leafAngle)) + treeLeafPositions[i][1]);
+            if (treeLeafColorTmp[0] < treeLeafColorShade[0])
+                treeLeafColorTmp[0] += 0.01f;
+            if (treeLeafColorTmp[1] > treeLeafColorShade[1])
+                treeLeafColorTmp[1] -= 0.01f;
+            if (treeLeafColorTmp[2] > treeLeafColorShade[2])
+                treeLeafColorTmp[2] -= 0.01f;
         }
         glEnd();
     }
