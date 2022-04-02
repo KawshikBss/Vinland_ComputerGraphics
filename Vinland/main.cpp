@@ -315,6 +315,8 @@ void tree_update(int) {
     }
     glutPostRedisplay();
     glutTimerFunc(FPS, tree_update, 0);
+    if (night)
+        return;
     GLfloat lastXpos = treePositions[treePositions.size() - 1][0];
     GLfloat lastYpos = treePositions[treePositions.size() - 1][1];
     if (lastXpos == treePositions[0][0] && lastYpos <= treeTrunkHeight) {
