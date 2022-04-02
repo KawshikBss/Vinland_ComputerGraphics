@@ -296,7 +296,7 @@ void bridge_display() {
 GLfloat treeStartXpos = - WIDTH / 2.0f, treeStartYpos = - HEIGHT / 2.0f;
 GLfloat treeTrunkHeight = 100.0f;
 GLfloat treeTrunkBotttomWidth = 25.0f, treeTrunkTopWidth = treeTrunkBotttomWidth;
-GLfloat treeBranchLength = 30.0f, treeBranchStartWidth = 30.0f;
+GLfloat treeBranchLength = 30.0f, treeBranchStartWidth = 20.0f;
 GLfloat treeGrowthRate = 1.0f;
 GLfloat treeBranchArea[4] = {treeStartXpos + 250.0f, treeStartYpos + treeTrunkHeight, treeStartXpos - 250.f, treeStartXpos + (2 * treeTrunkHeight)};
 GLfloat treeColor[3] = {0.36f, 0.25f, 0.2f};
@@ -330,18 +330,26 @@ void tree_update(int) {
             for (int i = 0; i < treePositions.size(); i++) {
                 if (i % 100 == 0 && i >= 200) {
                     vector<GLfloat> tmp;
-                    tmp.push_back(treePositions[i][0]);
-                    tmp.push_back(treePositions[i][0]);
-                    tmp.push_back(treePositions[i][1]);
-                    tmp.push_back(treePositions[i][1] + treeBranchStartWidth);
+                    tmp.push_back(treePositions[i][0]); // x1
+                    tmp.push_back(treePositions[i][1]); // y1
+                    tmp.push_back(treePositions[i][0]); // x2
+                    tmp.push_back(treePositions[i][1] - treeBranchStartWidth); // y2
+                    tmp.push_back(treePositions[i][0]); // x3
+                    tmp.push_back(treePositions[i][1]); // y3
+                    tmp.push_back(treePositions[i][0]); // x4
+                    tmp.push_back(treePositions[i][1] - treeBranchStartWidth); // y4
                     treeBranchPositions.push_back(tmp);
                 }
-                if (i % 200 == 0 && i >= 200) {
+                if (i % 150 == 0 && i >= 200) {
                     vector<GLfloat> tmp;
-                    tmp.push_back(treePositions[i][0]);
-                    tmp.push_back(treePositions[i][0]);
-                    tmp.push_back(treePositions[i][1]);
-                    tmp.push_back(treePositions[i][1] + treeBranchStartWidth);
+                    tmp.push_back(treePositions[i][0]); // x1
+                    tmp.push_back(treePositions[i][1]); // y1
+                    tmp.push_back(treePositions[i][0]); // x2
+                    tmp.push_back(treePositions[i][1] - treeBranchStartWidth); // y2
+                    tmp.push_back(treePositions[i][0]); // x3
+                    tmp.push_back(treePositions[i][1]); // y3
+                    tmp.push_back(treePositions[i][0]); // x4
+                    tmp.push_back(treePositions[i][1] - treeBranchStartWidth); // y4
                     treeBranchPositions.push_back(tmp);
                 }
             }
@@ -349,15 +357,19 @@ void tree_update(int) {
         else {
             for (int i = 0; i < treeBranchPositions.size(); i++) {
                 if (i % 2 == 0) {
-                    if (treeBranchPositions[i][3] < treeBranchLength) {
-                        treeBranchPositions[i][1] += treeGrowthRate;
-                        treeBranchPositions[i][3] += treeGrowthRate;
+                    if (treeBranchPositions[i][5] <= treeBranchLength && treeBranchPositions[i][7] <= treeBranchLength) {
+                        treeBranchPositions[i][4] += treeGrowthRate;
+                        treeBranchPositions[i][5] += treeGrowthRate;
+                        treeBranchPositions[i][6] += treeGrowthRate;
+                        treeBranchPositions[i][7] += treeGrowthRate;
                     }
                 }
                 else {
-                    if (treeBranchPositions[i][3] < treeBranchLength) {
-                        treeBranchPositions[i][1] -= treeGrowthRate;
-                        treeBranchPositions[i][3] += treeGrowthRate;
+                    if (treeBranchPositions[i][5] <= treeBranchLength && treeBranchPositions[i][7] <= treeBranchLength) {
+                        treeBranchPositions[i][4] -= treeGrowthRate;
+                        treeBranchPositions[i][5] += treeGrowthRate;
+                        treeBranchPositions[i][6] -= treeGrowthRate;
+                        treeBranchPositions[i][7] += treeGrowthRate;
                     }
                 }
             }
@@ -380,11 +392,11 @@ void tree_branch_display() {
     for (int i = 0; i < treeBranchPositions.size(); i++) {
         glBegin(GL_POLYGON);
         glColor3f(treeColor[0], treeColor[1], treeColor[2]);
-        glVertex2f(treeBranchPositions[i][0] + treeBranchPositions[i][1], treeBranchPositions[i][2] + treeBranchPositions[i][3] + treeBranchLength / 2.0f);
-        glVertex2f(treeBranchPositions[i][0] + treeBranchPositions[i][1], treeBranchPositions[i][2] + treeBranchPositions[i][3]);
+        glVertex2f(treeBranchPositions[i][0], treeBranchPositions[i][1]);
+        glVertex2f(treeBranchPositions[i][2], treeBranchPositions[i][3]);
         glColor3f(treeColorShade[0], treeColorShade[1], treeColorShade[2]);
-        glVertex2f(treeBranchPositions[i][0], treeBranchPositions[i][2] + treeBranchLength / 2.0f);
-        glVertex2f(treeBranchPositions[i][0], treeBranchPositions[i][2]);
+        glVertex2f(treeBranchPositions[i][4], treeBranchPositions[i][5]);
+        glVertex2f(treeBranchPositions[i][6], treeBranchPositions[i][7]);
         glEnd();
     }
 }
