@@ -302,9 +302,11 @@ GLfloat treeBranchArea[4] = {treeStartXpos + 250.0f, treeStartYpos + treeTrunkHe
 GLfloat treeColor[3] = {0.36f, 0.25f, 0.2f};
 GLfloat treeColorShade[3] = {0.82f, 0.49f, 0.17f};
 int growthTimer = 0;
+bool treeBranchesGrown = false;
 
 vector<vector<GLfloat> > treePositions;
 vector<vector<GLfloat> > treeBranchPositions;
+vector<vector<GLfloat> > treeLeafPositions;
 
 void tree_update(int) {
     if (treePositions.empty()) {
@@ -355,22 +357,37 @@ void tree_update(int) {
             }
         }
         else {
-            for (int i = 0; i < treeBranchPositions.size(); i++) {
-                if (i % 2 == 0) {
-                    if (treeBranchPositions[i][5] <= treeBranchLength && treeBranchPositions[i][7] <= treeBranchLength) {
-                        treeBranchPositions[i][4] += treeGrowthRate;
-                        treeBranchPositions[i][5] += treeGrowthRate;
-                        treeBranchPositions[i][6] += treeGrowthRate;
-                        treeBranchPositions[i][7] += treeGrowthRate;
+            if (!treeBranchesGrown) {
+                for (int i = 0; i < treeBranchPositions.size(); i++) {
+                    if (i % 2 == 0) {
+                        if (treeBranchPositions[i][5] <= treeBranchLength && treeBranchPositions[i][7] <= treeBranchLength) {
+                            treeBranchPositions[i][4] += treeGrowthRate;
+                            treeBranchPositions[i][5] += treeGrowthRate;
+                            treeBranchPositions[i][6] += treeGrowthRate;
+                            treeBranchPositions[i][7] += treeGrowthRate;
+                        }
+                    }
+                    else {
+                        if (treeBranchPositions[i][5] <= treeBranchLength && treeBranchPositions[i][7] <= treeBranchLength) {
+                            treeBranchPositions[i][4] -= treeGrowthRate;
+                            treeBranchPositions[i][5] += treeGrowthRate;
+                            treeBranchPositions[i][6] -= treeGrowthRate;
+                            treeBranchPositions[i][7] += treeGrowthRate;
+                        }
                     }
                 }
-                else {
-                    if (treeBranchPositions[i][5] <= treeBranchLength && treeBranchPositions[i][7] <= treeBranchLength) {
-                        treeBranchPositions[i][4] -= treeGrowthRate;
-                        treeBranchPositions[i][5] += treeGrowthRate;
-                        treeBranchPositions[i][6] -= treeGrowthRate;
-                        treeBranchPositions[i][7] += treeGrowthRate;
-                    }
+                if (treeBranchPositions[treeBranchPositions.size() - 1][7] >= treeBranchLength)
+                    treeBranchesGrown = true;
+            }
+            cout << treeBranchPositions[treeBranchPositions.size() - 1][7] << endl;
+        }
+        if (treeBranchesGrown) {
+            if (treeLeafPositions.empty()) {
+                for (int i = 0; i < treeBranchPositions.size(); i++) {
+                    vector<GLfloat> tmp;
+                    tmp.push_back(treeBranchPositions[i][6]);
+                    tmp.push_back(treeBranchPositions[i][7]);
+                    treeLeafPositions.push_back(tmp);
                 }
             }
         }
@@ -401,9 +418,26 @@ void tree_branch_display() {
     }
 }
 
+void tree_leafs_display() {
+    float leafAngle, leafRadius;
+    for (int i = 0; i < treeLeafPositions.size(); i++) {
+            cout << treeLeafPositions[i][0] << " " << treeLeafPositions[i][0] << endl;
+        glColor3f(0.0f, 1.0f, 0.0f);
+        glBegin(GL_POLYGON);
+        for (int j = 0; j < 100; j++) {
+            leafAngle = 2.0f * 3.141615f * j / 100;
+            leafRadius = (50 * (i + 1));
+            glVertex2f((leafRadius * cosf(leafAngle)) + treeLeafPositions[i][0], (leafRadius * sinf(leafAngle)) + treeLeafPositions[i][1]);
+        }
+        glEnd();
+    }
+}
+
 void tree_display() {
     tree_branch_display();
     tree_trunk_display();
+    if (treeBranchesGrown)
+        tree_leafs_display();
 }
 
 int main(int argc, char **argv) {
