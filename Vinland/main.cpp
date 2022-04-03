@@ -293,18 +293,24 @@ void bridge_display() {
 }
 
 // tree
-GLfloat treeStartXpos = - WIDTH / 2.0f, treeStartYpos = - HEIGHT / 2.0f;
+GLfloat treeStartXpos = - WIDTH / 1.5f, treeStartYpos = - HEIGHT / 2.0f;
 GLfloat treeTrunkHeight = 100.0f;
 GLfloat treeTrunkBotttomWidth = 25.0f, treeTrunkTopWidth = treeTrunkBotttomWidth;
 GLfloat treeBranchLength = 70.0f, treeBranchStartWidth = 20.0f;
+int treeLeafSegmentsMax = 65;
+float treeLeafSegments = 0.0f;
 GLfloat treeGrowthRate = 1.0f;
 GLfloat treeBranchArea[4] = {treeStartXpos + 250.0f, treeStartYpos + treeTrunkHeight, treeStartXpos - 250.f, treeStartXpos + (2 * treeTrunkHeight)};
 GLfloat treeColor[3] = {0.36f, 0.25f, 0.2f};
 GLfloat treeColorShade[3] = {0.82f, 0.49f, 0.17f};
+GLfloat treeLeafColor[3] = {0.0f, 1.0f, 0.49f};
+GLfloat treeLeafColorShade[3] = {0.23f, 0.8f, 0.44f};
 int growthTimer = 0;
+bool treeBranchesGrown = false;
 
 vector<vector<GLfloat> > treePositions;
 vector<vector<GLfloat> > treeBranchPositions;
+vector<vector<GLfloat> > treeLeafPositions;
 
 void tree_update(int) {
     if (treePositions.empty()) {
@@ -355,22 +361,36 @@ void tree_update(int) {
             }
         }
         else {
-            for (int i = 0; i < treeBranchPositions.size(); i++) {
-                if (i % 2 == 0) {
-                    if (treeBranchPositions[i][5] <= treeBranchLength && treeBranchPositions[i][7] <= treeBranchLength) {
-                        treeBranchPositions[i][4] += treeGrowthRate;
-                        treeBranchPositions[i][5] += treeGrowthRate;
-                        treeBranchPositions[i][6] += treeGrowthRate;
-                        treeBranchPositions[i][7] += treeGrowthRate;
+            if (!treeBranchesGrown) {
+                for (int i = 0; i < treeBranchPositions.size(); i++) {
+                    if (i % 2 == 0) {
+                        if (treeBranchPositions[i][5] <= treeBranchLength && treeBranchPositions[i][7] <= treeBranchLength) {
+                            treeBranchPositions[i][4] += treeGrowthRate;
+                            treeBranchPositions[i][5] += treeGrowthRate;
+                            treeBranchPositions[i][6] += treeGrowthRate;
+                            treeBranchPositions[i][7] += treeGrowthRate;
+                        }
+                    }
+                    else {
+                        if (treeBranchPositions[i][5] <= treeBranchLength && treeBranchPositions[i][7] <= treeBranchLength) {
+                            treeBranchPositions[i][4] -= treeGrowthRate;
+                            treeBranchPositions[i][5] += treeGrowthRate;
+                            treeBranchPositions[i][6] -= treeGrowthRate;
+                            treeBranchPositions[i][7] += treeGrowthRate;
+                        }
                     }
                 }
-                else {
-                    if (treeBranchPositions[i][5] <= treeBranchLength && treeBranchPositions[i][7] <= treeBranchLength) {
-                        treeBranchPositions[i][4] -= treeGrowthRate;
-                        treeBranchPositions[i][5] += treeGrowthRate;
-                        treeBranchPositions[i][6] -= treeGrowthRate;
-                        treeBranchPositions[i][7] += treeGrowthRate;
-                    }
+                if (abs(treeBranchPositions[0][7] - treeBranchPositions[0][3]) >= 351)
+                    treeBranchesGrown = true;
+            }
+        }
+        if (treeBranchesGrown) {
+            if (treeLeafPositions.empty()) {
+                for (int i = 0; i < treeBranchPositions.size(); i++) {
+                    vector<GLfloat> tmp;
+                    tmp.push_back(treeBranchPositions[i][6]);
+                    tmp.push_back(treeBranchPositions[i][7]);
+                    treeLeafPositions.push_back(tmp);
                 }
             }
         }
@@ -401,9 +421,41 @@ void tree_branch_display() {
     }
 }
 
+void tree_leafs_display() {
+    float leafAngle, leafRadius;
+    if (treeLeafSegments < treeLeafSegmentsMax)
+        treeLeafSegments += 0.3f;
+    for (int i = 0; i < treeLeafPositions.size(); i++) {
+        GLfloat treeLeafColorTmp[3];
+        treeLeafColorTmp[0] = treeLeafColor[0];
+        treeLeafColorTmp[1] = treeLeafColor[1];
+        treeLeafColorTmp[2] = treeLeafColor[2];
+        glBegin(GL_POLYGON);
+        for (int j = 0; j < treeLeafSegments; j++) {
+            if (j < treeLeafSegments / 2)
+                glColor3f(treeLeafColor[0], treeLeafColor[1], treeLeafColor[2]);
+            else
+                glColor3f(treeLeafColorShade[0], treeLeafColorShade[1], treeLeafColorShade[2]);
+            // glColor3f(treeLeafColorTmp[0], treeLeafColorTmp[1], treeLeafColorTmp[2]);
+            leafAngle = 2.0f * 3.141615f * j / 100;
+            leafRadius = (15 * (i + 1));
+            glVertex2f((leafRadius * cosf(leafAngle)) + treeLeafPositions[i][0], (leafRadius * sinf(leafAngle)) + treeLeafPositions[i][1]);
+            if (treeLeafColorTmp[0] < treeLeafColorShade[0])
+                treeLeafColorTmp[0] += 0.01f;
+            if (treeLeafColorTmp[1] > treeLeafColorShade[1])
+                treeLeafColorTmp[1] -= 0.01f;
+            if (treeLeafColorTmp[2] > treeLeafColorShade[2])
+                treeLeafColorTmp[2] -= 0.01f;
+        }
+        glEnd();
+    }
+}
+
 void tree_display() {
     tree_branch_display();
     tree_trunk_display();
+    if (treeBranchesGrown)
+        tree_leafs_display();
 }
 
 int main(int argc, char **argv) {
