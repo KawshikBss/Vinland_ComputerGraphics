@@ -6,3 +6,10 @@
 	<GL/glut.h>
 	<math.h>
 
+1649080956 source:c:\users\asus\desktop\vinland_computergraphics\vinland\main.cpp
+	<iostream>
+	<windows.h>
+	<GL/glu.h>
+	<GL/glut.h>
+	<math.h>
+

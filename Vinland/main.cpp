@@ -3,7 +3,7 @@
 #include <GL/glu.h>
 #include <GL/glut.h>
 #include <math.h>
-
+// amar heda
 using namespace std;
 
 int WIDTH = 1280;
