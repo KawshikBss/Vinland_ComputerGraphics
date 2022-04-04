@@ -295,10 +295,22 @@ void bridge_display() {
 // ocean
 GLfloat oceanXpos = - WIDTH, oceanYpos = - HEIGHT;
 GLfloat oceanWidth = WIDTH * 2.0f, oceanHeight = HEIGHT + 100.0f;
+int oceanWaveLengths = 10;
+vector<vector<GLfloat > > oceanWavePositions;
 GLfloat oceanColor[3] = {0.0f, 0.5f, 1.0f};
 GLfloat oceanColorShade[3] = {0.49f, 0.97f, 1.0f};
 
 void ocean_update(int) {
+    if (oceanWavePositions.empty()) {
+        for (int i = 0; i <= oceanWidth / oceanWaveLengths; i++) {
+            vector<GLfloat> tmp;
+            if (i % == 0)
+                tmp.push_back(oceanHeight - (oceanWaveLengths * i) - oceanWaveLengths);
+            else
+                tmp.push_back(oceanHeight - (oceanWaveLengths * i));
+            oceanWavePositions.push_back(tmp);
+        }
+    }
     glutTimerFunc(FPS, ocean_update, 0);
     if (morning) {
         if (oceanColor[1] < 0.5f)
