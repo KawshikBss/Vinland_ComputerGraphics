@@ -292,6 +292,23 @@ void bridge_display() {
     bridge_legs_display();
 }
 
+// ocean
+GLfloat oceanXpos = - WIDTH, oceanYpos = - HEIGHT;
+GLfloat oceanWidth = WIDTH * 2.0f, oceanHeight = HEIGHT + 100.0f;
+GLfloat oceanColor[3] = {0.0f, 0.5f, 1.0f};
+GLfloat oceanColorShade[3] = {0.45f, 0.57f, 0.98f};
+
+void ocean_display() {
+    glBegin(GL_POLYGON);
+    glColor3f(oceanColorShade[0], oceanColorShade[1], oceanColorShade[2]);
+    glVertex2f(oceanXpos, oceanYpos);
+    glVertex2f(oceanXpos + oceanWidth, oceanYpos);
+    glColor3f(oceanColor[0], oceanColor[1], oceanColor[2]);
+    glVertex2f(oceanXpos + oceanWidth, oceanYpos + oceanHeight);
+    glVertex2f(oceanXpos, oceanYpos + oceanHeight);
+    glEnd();
+}
+
 // tree
 GLfloat treeStartXpos = - WIDTH / 1.5f, treeStartYpos = - HEIGHT / 2.0f;
 GLfloat treeTrunkHeight = 100.0f;
@@ -487,6 +504,7 @@ void display() {
     if (morning || noon || evening)
         sun_display();
     bridge_display();
+    ocean_display();
     tree_display();
     glFlush();
 }
