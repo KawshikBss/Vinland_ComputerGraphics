@@ -360,6 +360,29 @@ void ocean_display() {
     ocean_waves_display();
 }
 
+// island
+GLfloat islandCenterXpos = -WIDTH, islandCenterYpos = -HEIGHT;
+GLfloat islandRadius = WIDTH / 1.5f;
+float islandSegments = 20.0f, islandAngle;
+
+void island_display() {
+    glColor3f(0.8f, 0.4f, 0.3f);
+    glBegin(GL_POLYGON);
+    for (int i = 0; i <= islandSegments / 2; i++) {
+        islandAngle = 2.0f * 3.141615f * i / islandSegments;
+        glVertex2f(((islandRadius + 10.0f) * cosf(islandAngle) + islandCenterXpos), ((islandRadius + 10.0f) * sinf(islandAngle) + islandCenterYpos));
+    }
+    glEnd();
+
+    glColor3f(0.0f, 1.0f, 0.3f);
+    glBegin(GL_POLYGON);
+    for (int i = 0; i <= islandSegments / 2; i++) {
+        islandAngle = 2.0f * 3.141615f * i / islandSegments;
+        glVertex2f((islandRadius * cosf(islandAngle) + islandCenterXpos), (islandRadius * sinf(islandAngle) + islandCenterYpos));
+    }
+    glEnd();
+}
+
 // tree
 GLfloat treeStartXpos = - WIDTH / 1.5f, treeStartYpos = - HEIGHT / 2.0f;
 GLfloat treeTrunkHeight = 100.0f;
@@ -590,6 +613,7 @@ void display() {
         sun_display();
     bridge_display();
     ocean_display();
+    island_display();
     tree_display();
     glFlush();
 }
