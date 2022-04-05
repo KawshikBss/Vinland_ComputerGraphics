@@ -337,7 +337,7 @@ void ocean_waves_display() {
         glColor3f(oceanColorShade[0], oceanColorShade[1], oceanColorShade[2]);
         glVertex2f(- WIDTH, - (oceanWaveOffsets * j));
         for (int i = - WIDTH; i < WIDTH * 2; i += 3) {
-            glVertex2f(i, (sinf(oceanWaveLengths[j]) * 100) - (oceanWaveOffsets * j));
+            glVertex2f(i * (j + 1), (sinf(oceanWaveLengths[j]) * 100) - (oceanWaveOffsets * j));
             if (oceanWaveLengths[j] > 100.0f)
                 oceanWaveLengths[j] = 50.0f;
             if (i % 2 == 0)
@@ -364,22 +364,33 @@ void ocean_display() {
 GLfloat islandCenterXpos = -WIDTH, islandCenterYpos = -HEIGHT;
 GLfloat islandRadius = WIDTH / 1.5f;
 float islandSegments = 20.0f, islandAngle;
+GLfloat islandGrassColor[3] = {0.18f, 0.54f, 0.34f};
+GLfloat islandGrassColorShade[3] = {0.67f, 1.0f, 0.18f};
 
 void island_display() {
     glColor3f(0.8f, 0.3f, 0.2f);
     glBegin(GL_POLYGON);
-    for (int i = 0; i <= islandSegments / 2; i++) {
+    for (int i = islandSegments / 4; i >= 0; i--) {
         islandAngle = 2.0f * 3.141615f * i / islandSegments;
-        glVertex2f(((islandRadius + 10.0f) * cosf(islandAngle) + islandCenterXpos), ((islandRadius + 10.0f) * sinf(islandAngle) + islandCenterYpos));
+        if (i % 2 == 0)
+            glVertex2f(((islandRadius + 10.0f + (i * 100)) * cosf(islandAngle) + islandCenterXpos), ((islandRadius) * sinf(islandAngle) + islandCenterYpos));
+        else
+            glVertex2f(((islandRadius + 10.0f) * cosf(islandAngle) + islandCenterXpos), ((islandRadius + 10.0f) * sinf(islandAngle) + islandCenterYpos));
     }
+    glVertex2f(- WIDTH, - HEIGHT);
     glEnd();
 
-    glColor3f(0.0f, 1.0f, 0.3f);
     glBegin(GL_POLYGON);
-    for (int i = 0; i <= islandSegments / 2; i++) {
+    glColor3f(islandGrassColorShade[0], islandGrassColorShade[1], islandGrassColorShade[2]);
+    for (int i = islandSegments / 4; i >= 0; i--) {
         islandAngle = 2.0f * 3.141615f * i / islandSegments;
-        glVertex2f((islandRadius * cosf(islandAngle) + islandCenterXpos), (islandRadius * sinf(islandAngle) + islandCenterYpos));
+        if (i % 2 == 0)
+            glVertex2f(((islandRadius + (i * 100)) * cosf(islandAngle) + islandCenterXpos), (islandRadius * sinf(islandAngle) + islandCenterYpos));
+        else
+            glVertex2f((islandRadius * cosf(islandAngle) + islandCenterXpos), (islandRadius * sinf(islandAngle) + islandCenterYpos));
     }
+    glColor3f(islandGrassColor[0], islandGrassColor[1], islandGrassColor[2]);
+    glVertex2f(- WIDTH, - HEIGHT);
     glEnd();
 }
 
@@ -388,7 +399,7 @@ GLfloat treeStartXpos = - WIDTH / 1.5f, treeStartYpos = - HEIGHT / 2.0f;
 GLfloat treeTrunkHeight = 100.0f;
 GLfloat treeTrunkBotttomWidth = 25.0f, treeTrunkTopWidth = treeTrunkBotttomWidth;
 GLfloat treeBranchLength = 70.0f, treeBranchStartWidth = 20.0f;
-int treeLeafSegmentsMax = 65;
+int treeLeafSegmentsMax = 100;
 float treeLeafSegments = 0.0f;
 GLfloat treeGrowthRate = 1.0f;
 GLfloat treeBranchArea[4] = {treeStartXpos + 250.0f, treeStartYpos + treeTrunkHeight, treeStartXpos - 250.f, treeStartXpos + (2 * treeTrunkHeight)};
@@ -547,7 +558,7 @@ void tree_branch_display() {
 void tree_leafs_display() {
     float leafAngle, leafRadius;
     if (treeLeafSegments < treeLeafSegmentsMax)
-        treeLeafSegments += 0.3f;
+        treeLeafSegments += 0.8f;
     for (int i = 0; i < treeLeafPositions.size(); i++) {
         GLfloat treeLeafColorTmp[3];
         treeLeafColorTmp[0] = treeLeafColor[0];
@@ -562,7 +573,10 @@ void tree_leafs_display() {
             glColor3f(treeLeafColorTmp[0], treeLeafColorTmp[1], treeLeafColorTmp[2]);
             leafAngle = 2.0f * 3.141615f * j / 100;
             leafRadius = (15 * (i + 1));
-            glVertex2f((leafRadius * cosf(leafAngle)) + treeLeafPositions[i][0], (leafRadius * sinf(leafAngle)) + treeLeafPositions[i][1]);
+            if (j % 10 == 0)
+                glVertex2f((leafRadius * cosf(leafAngle)) + treeLeafPositions[i][0], (leafRadius * sinf(leafAngle)) + treeLeafPositions[i][1]);
+            else if (j % 5 == 0)
+                glVertex2f((leafRadius * cosf(leafAngle)) / 2 + treeLeafPositions[i][0], (leafRadius * sinf(leafAngle)) / 2 + treeLeafPositions[i][1]);
             if (treeLeafColorTmp[0] < treeLeafColorShade[0])
                 treeLeafColorTmp[0] += 0.01f;
             if (treeLeafColorTmp[1] > treeLeafColorShade[1])
