@@ -3,6 +3,7 @@
 #include <GL/glu.h>
 #include <GL/glut.h>
 #include <math.h>
+#include <vector>
 
 using namespace std;
 
@@ -218,6 +219,7 @@ void bridge_arches_display() {
         for (int j = archeSteps; j >= archeSteps / 2; j--) {
             angle = 2.0f * 3.141615f * j / archeSteps;
             glColor3f(bridgeColor[0], bridgeColor[1], bridgeColor[2]);
+            glLineWidth(4.0f);
             glBegin(GL_LINES);
             glVertex2f((radius * cosf(angle) + centerX), (radius * sinf(angle) + centerY));
             glVertex2f((radius * cosf(angle) + centerX), bridgeHorizonY);
@@ -290,6 +292,272 @@ void bridge_display() {
     bridge_legs_display();
 }
 
+// ocean
+GLfloat oceanXpos = - WIDTH, oceanYpos = - HEIGHT;
+GLfloat oceanWidth = WIDTH * 2.0f, oceanHeight = HEIGHT + 100.0f;
+float oceanWaveOffsets = HEIGHT / 4.0f;
+float oceanWaveLengths[4] = {50.0f, 50.0f, 50.0f, 50.0f};
+GLfloat oceanColor[3] = {0.0f, 0.5f, 1.0f};
+GLfloat oceanColorShade[3] = {0.49f, 0.97f, 1.0f};
+
+void ocean_update(int) {
+    glutTimerFunc(FPS, ocean_update, 0);
+    if (morning) {
+        if (oceanColor[1] < 0.5f)
+            oceanColor[1] += 0.01f;
+        if (oceanColor[2] < 1.0f)
+            oceanColor[2] += 0.01f;
+        if (oceanColorShade[0] < 0.49f)
+            oceanColorShade[0] += 0.01f;
+        if (oceanColorShade[1] < 0.97f)
+            oceanColorShade[1] += 0.01f;
+        if (oceanColorShade[2] < 1.0f)
+            oceanColorShade[2] += 0.01f;
+    }
+    else if (noon && sunYPos <= HEIGHT / 2.0f) {
+        if (oceanColor[1] > 0.0f)
+            oceanColor[1] -= 0.01f;
+        if (oceanColor[2] > 0.5f)
+            oceanColor[2] -= 0.01f;
+        if (oceanColorShade[0] > 0.05f)
+            oceanColorShade[0] -= 0.01f;
+        if (oceanColorShade[1] > 0.32f)
+            oceanColorShade[1] -= 0.01f;
+        if (oceanColorShade[2] > 0.72f)
+            oceanColorShade[2] -= 0.01f;
+    }
+
+}
+
+void ocean_waves_display() {
+    for (int j = 0; j < 4; j++) {
+        glBegin(GL_POLYGON);
+        glColor3f(oceanColor[0], oceanColor[1], oceanColor[2]);
+        glVertex2f(- WIDTH, -HEIGHT);
+        glColor3f(oceanColorShade[0], oceanColorShade[1], oceanColorShade[2]);
+        glVertex2f(- WIDTH, - (oceanWaveOffsets * j));
+        for (int i = - WIDTH; i < WIDTH * 2; i += 3) {
+            glVertex2f(i, (sinf(oceanWaveLengths[j]) * 100) - (oceanWaveOffsets * j));
+            if (oceanWaveLengths[j] > 100.0f)
+                oceanWaveLengths[j] = 50.0f;
+            if (i % 2 == 0)
+                oceanWaveLengths[j] += 0.01f;
+        }
+        glVertex2f(WIDTH, -HEIGHT);
+        glEnd();
+    }
+}
+
+void ocean_display() {
+    glBegin(GL_POLYGON);
+    glColor3f(oceanColor[0], oceanColor[1], oceanColor[2]);
+    glVertex2f(oceanXpos, oceanYpos);
+    glVertex2f(oceanXpos + oceanWidth, oceanYpos);
+    glColor3f(oceanColorShade[0], oceanColorShade[1], oceanColorShade[2]);
+    glVertex2f(oceanXpos + oceanWidth, oceanYpos + oceanHeight);
+    glVertex2f(oceanXpos, oceanYpos + oceanHeight);
+    glEnd();
+    ocean_waves_display();
+}
+
+// tree
+GLfloat treeStartXpos = - WIDTH / 1.5f, treeStartYpos = - HEIGHT / 2.0f;
+GLfloat treeTrunkHeight = 100.0f;
+GLfloat treeTrunkBotttomWidth = 25.0f, treeTrunkTopWidth = treeTrunkBotttomWidth;
+GLfloat treeBranchLength = 70.0f, treeBranchStartWidth = 20.0f;
+int treeLeafSegmentsMax = 65;
+float treeLeafSegments = 0.0f;
+GLfloat treeGrowthRate = 1.0f;
+GLfloat treeBranchArea[4] = {treeStartXpos + 250.0f, treeStartYpos + treeTrunkHeight, treeStartXpos - 250.f, treeStartXpos + (2 * treeTrunkHeight)};
+GLfloat treeColor[3] = {0.36f, 0.25f, 0.2f};
+GLfloat treeColorShade[3] = {0.82f, 0.49f, 0.17f};
+GLfloat treeLeafColor[3] = {0.0f, 1.0f, 0.49f};
+GLfloat treeLeafColorShade[3] = {0.23f, 0.8f, 0.44f};
+int growthTimer = 0;
+bool treeBranchesGrown = false;
+
+vector<vector<GLfloat> > treePositions;
+vector<vector<GLfloat> > treeBranchPositions;
+vector<vector<GLfloat> > treeLeafPositions;
+
+void tree_color_update(int) {
+    glutTimerFunc(FPS, tree_color_update, 0);
+    if (morning) {
+        if (treeColor[0] > 0.36f)
+            treeColor[0] -= 0.01f;
+        if (treeColor[1] > 0.25f)
+            treeColor[1] -= 0.01f;
+        if (treeColor[2] < 0.2f)
+            treeColor[2] += 0.01f;
+        if (treeColorShade[0] < 0.82f)
+            treeColorShade[0] += 0.01f;
+        if (treeColorShade[1] < 0.49f)
+            treeColorShade[1] += 0.01f;
+        if (treeColorShade[2] < 0.17f)
+            treeColorShade[2] += 0.01f;
+    }
+    else if (noon && sunYPos <= HEIGHT / 2.0f) {
+        if (treeColor[0] < 0.5f)
+            treeColor[0] += 0.01f;
+        if (treeColor[1] < 0.27f)
+            treeColor[1] += 0.01f;
+        if (treeColor[2] > 0.1f)
+            treeColor[2] -= 0.01f;
+        if (treeColorShade[0] > 0.64f)
+            treeColorShade[0] -= 0.01f;
+        if (treeColorShade[1] > 0.16f)
+            treeColorShade[1] -= 0.01f;
+        if (treeColorShade[2] > 0.16f)
+            treeColorShade[2] -= 0.01f;
+    }
+}
+
+void tree_update(int) {
+    if (treePositions.empty()) {
+        vector<GLfloat> tmp;
+        tmp.push_back(treeStartXpos);
+        tmp.push_back(treeStartYpos);
+        treePositions.push_back(tmp);
+    }
+    glutPostRedisplay();
+    glutTimerFunc(FPS, tree_update, 0);
+    if (!morning && sunYPos <= HEIGHT / 1.2f)
+        return;
+    GLfloat lastXpos = treePositions[treePositions.size() - 1][0];
+    GLfloat lastYpos = treePositions[treePositions.size() - 1][1];
+    if (lastXpos == treePositions[0][0] && lastYpos <= treeTrunkHeight) {
+        vector<GLfloat> tmpPos;
+        tmpPos.push_back(lastXpos);
+        tmpPos.push_back(lastYpos + treeGrowthRate);
+        treePositions.push_back(tmpPos);
+        if (treeTrunkTopWidth >= 5.0f)
+            treeTrunkTopWidth -= 0.05f;
+    }
+    else {
+        if (treeBranchPositions.empty()) {
+            for (int i = 0; i < treePositions.size(); i++) {
+                if (i % 50 == 0 && i >= 200) {
+                    vector<GLfloat> tmp;
+                    tmp.push_back(treePositions[i][0]); // x1
+                    tmp.push_back(treePositions[i][1]); // y1
+                    tmp.push_back(treePositions[i][0]); // x2
+                    tmp.push_back(treePositions[i][1] - treeBranchStartWidth); // y2
+                    tmp.push_back(treePositions[i][0]); // x3
+                    tmp.push_back(treePositions[i][1]); // y3
+                    tmp.push_back(treePositions[i][0]); // x4
+                    tmp.push_back(treePositions[i][1] - treeBranchStartWidth); // y4
+                    treeBranchPositions.push_back(tmp);
+                    vector<GLfloat> tmp2;
+                    tmp2.push_back(treePositions[i][0]); // x1
+                    tmp2.push_back(treePositions[i][1]); // y1
+                    tmp2.push_back(treePositions[i][0]); // x2
+                    tmp2.push_back(treePositions[i][1] - treeBranchStartWidth); // y2
+                    tmp2.push_back(treePositions[i][0]); // x3
+                    tmp2.push_back(treePositions[i][1]); // y3
+                    tmp2.push_back(treePositions[i][0]); // x4
+                    tmp2.push_back(treePositions[i][1] - treeBranchStartWidth); // y4
+                    treeBranchPositions.push_back(tmp2);
+                }
+            }
+        }
+        else {
+            if (!treeBranchesGrown) {
+                for (int i = 0; i < treeBranchPositions.size(); i++) {
+                    if (i % 2 == 0) {
+                        if (treeBranchPositions[i][5] <= treeBranchLength && treeBranchPositions[i][7] <= treeBranchLength) {
+                            treeBranchPositions[i][4] += treeGrowthRate;
+                            treeBranchPositions[i][5] += treeGrowthRate;
+                            treeBranchPositions[i][6] += treeGrowthRate;
+                            treeBranchPositions[i][7] += treeGrowthRate;
+                        }
+                    }
+                    else {
+                        if (treeBranchPositions[i][5] <= treeBranchLength && treeBranchPositions[i][7] <= treeBranchLength) {
+                            treeBranchPositions[i][4] -= treeGrowthRate;
+                            treeBranchPositions[i][5] += treeGrowthRate;
+                            treeBranchPositions[i][6] -= treeGrowthRate;
+                            treeBranchPositions[i][7] += treeGrowthRate;
+                        }
+                    }
+                }
+                if (abs(treeBranchPositions[0][7] - treeBranchPositions[0][3]) >= 351)
+                    treeBranchesGrown = true;
+            }
+        }
+        if (treeBranchesGrown) {
+            if (treeLeafPositions.empty()) {
+                for (int i = 0; i < treeBranchPositions.size(); i++) {
+                    vector<GLfloat> tmp;
+                    tmp.push_back(treeBranchPositions[i][6]);
+                    tmp.push_back(treeBranchPositions[i][7]);
+                    treeLeafPositions.push_back(tmp);
+                }
+            }
+        }
+    }
+}
+
+void tree_trunk_display() {
+    glBegin(GL_POLYGON);
+    glColor3f(treeColor[0], treeColor[1], treeColor[2]);
+    glVertex2f(treePositions[0][0] - treeTrunkBotttomWidth, treePositions[0][1]);
+    glVertex2f(treePositions[0][0] + treeTrunkBotttomWidth, treePositions[0][1]);
+    glColor3f(treeColorShade[0], treeColorShade[1], treeColorShade[2]);
+    glVertex2f(treePositions[treePositions.size() - 1][0] + treeTrunkTopWidth, treePositions[treePositions.size() - 1][1]);
+    glVertex2f(treePositions[treePositions.size() - 1][0] - treeTrunkTopWidth, treePositions[treePositions.size() - 1][1]);
+    glEnd();
+}
+
+void tree_branch_display() {
+    for (int i = 0; i < treeBranchPositions.size(); i++) {
+        glBegin(GL_POLYGON);
+        glColor3f(treeColor[0], treeColor[1], treeColor[2]);
+        glVertex2f(treeBranchPositions[i][0], treeBranchPositions[i][1]);
+        glVertex2f(treeBranchPositions[i][2], treeBranchPositions[i][3]);
+        glColor3f(treeColorShade[0], treeColorShade[1], treeColorShade[2]);
+        glVertex2f(treeBranchPositions[i][4], treeBranchPositions[i][5]);
+        glVertex2f(treeBranchPositions[i][6], treeBranchPositions[i][7]);
+        glEnd();
+    }
+}
+
+void tree_leafs_display() {
+    float leafAngle, leafRadius;
+    if (treeLeafSegments < treeLeafSegmentsMax)
+        treeLeafSegments += 0.3f;
+    for (int i = 0; i < treeLeafPositions.size(); i++) {
+        GLfloat treeLeafColorTmp[3];
+        treeLeafColorTmp[0] = treeLeafColor[0];
+        treeLeafColorTmp[1] = treeLeafColor[1];
+        treeLeafColorTmp[2] = treeLeafColor[2];
+        glBegin(GL_POLYGON);
+        for (int j = 0; j < treeLeafSegments; j++) {
+            /*if (j < treeLeafSegments / 2)
+                glColor3f(treeLeafColor[0], treeLeafColor[1], treeLeafColor[2]);
+            else
+                glColor3f(treeLeafColorShade[0], treeLeafColorShade[1], treeLeafColorShade[2]);*/
+            glColor3f(treeLeafColorTmp[0], treeLeafColorTmp[1], treeLeafColorTmp[2]);
+            leafAngle = 2.0f * 3.141615f * j / 100;
+            leafRadius = (15 * (i + 1));
+            glVertex2f((leafRadius * cosf(leafAngle)) + treeLeafPositions[i][0], (leafRadius * sinf(leafAngle)) + treeLeafPositions[i][1]);
+            if (treeLeafColorTmp[0] < treeLeafColorShade[0])
+                treeLeafColorTmp[0] += 0.01f;
+            if (treeLeafColorTmp[1] > treeLeafColorShade[1])
+                treeLeafColorTmp[1] -= 0.01f;
+            if (treeLeafColorTmp[2] > treeLeafColorShade[2])
+                treeLeafColorTmp[2] -= 0.01f;
+        }
+        glEnd();
+    }
+}
+
+void tree_display() {
+    tree_branch_display();
+    tree_trunk_display();
+    if (treeBranchesGrown)
+        tree_leafs_display();
+}
+
 int main(int argc, char **argv) {
     glutInit(&argc, argv);
     glutCreateWindow("Vinland");
@@ -306,6 +574,9 @@ void update() {
     glutTimerFunc(FPS, moon_update, 0);
     glutTimerFunc(FPS, sun_update, 0);
     glutTimerFunc(FPS, bridge_update, 0);
+    glutTimerFunc(FPS, ocean_update, 0);
+    glutTimerFunc(FPS, tree_color_update, 0);
+    glutTimerFunc(FPS, tree_update, 0);
 }
 
 void display() {
@@ -318,6 +589,8 @@ void display() {
     if (morning || noon || evening)
         sun_display();
     bridge_display();
+    ocean_display();
+    tree_display();
     glFlush();
 }
 
