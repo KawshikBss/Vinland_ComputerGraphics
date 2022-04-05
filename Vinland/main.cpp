@@ -384,12 +384,13 @@ void island_display() {
     glColor3f(islandGrassColorShade[0], islandGrassColorShade[1], islandGrassColorShade[2]);
     for (int i = islandSegments / 4; i >= 0; i--) {
         islandAngle = 2.0f * 3.141615f * i / islandSegments;
+        if (i <= islandSegments / 8)
+            glColor3f(islandGrassColor[0], islandGrassColor[1], islandGrassColor[2]);
         if (i % 2 == 0)
             glVertex2f(((islandRadius + (i * 100)) * cosf(islandAngle) + islandCenterXpos), (islandRadius * sinf(islandAngle) + islandCenterYpos));
         else
             glVertex2f((islandRadius * cosf(islandAngle) + islandCenterXpos), (islandRadius * sinf(islandAngle) + islandCenterYpos));
     }
-    glColor3f(islandGrassColor[0], islandGrassColor[1], islandGrassColor[2]);
     glVertex2f(- WIDTH, - HEIGHT);
     glEnd();
 }
