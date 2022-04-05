@@ -366,7 +366,7 @@ GLfloat islandRadius = WIDTH / 1.5f;
 float islandSegments = 20.0f, islandAngle;
 
 void island_display() {
-    glColor3f(0.8f, 0.4f, 0.3f);
+    glColor3f(0.8f, 0.3f, 0.2f);
     glBegin(GL_POLYGON);
     for (int i = 0; i <= islandSegments / 2; i++) {
         islandAngle = 2.0f * 3.141615f * i / islandSegments;
