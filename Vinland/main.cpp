@@ -295,22 +295,12 @@ void bridge_display() {
 // ocean
 GLfloat oceanXpos = - WIDTH, oceanYpos = - HEIGHT;
 GLfloat oceanWidth = WIDTH * 2.0f, oceanHeight = HEIGHT + 100.0f;
-int oceanWaveLengths = 10;
-vector<vector<GLfloat > > oceanWavePositions;
+float oceanWaveOffsets = HEIGHT / 4.0f;
+float oceanWaveLengths[4] = {50.0f, 50.0f, 50.0f, 50.0f};
 GLfloat oceanColor[3] = {0.0f, 0.5f, 1.0f};
 GLfloat oceanColorShade[3] = {0.49f, 0.97f, 1.0f};
 
 void ocean_update(int) {
-    if (oceanWavePositions.empty()) {
-        for (int i = 0; i <= oceanWidth / oceanWaveLengths; i++) {
-            vector<GLfloat> tmp;
-            if (i % == 0)
-                tmp.push_back(oceanHeight - (oceanWaveLengths * i) - oceanWaveLengths);
-            else
-                tmp.push_back(oceanHeight - (oceanWaveLengths * i));
-            oceanWavePositions.push_back(tmp);
-        }
-    }
     glutTimerFunc(FPS, ocean_update, 0);
     if (morning) {
         if (oceanColor[1] < 0.5f)
@@ -339,6 +329,25 @@ void ocean_update(int) {
 
 }
 
+void ocean_waves_display() {
+    for (int j = 0; j < 4; j++) {
+        glBegin(GL_POLYGON);
+        glColor3f(oceanColor[0], oceanColor[1], oceanColor[2]);
+        glVertex2f(- WIDTH, -HEIGHT);
+        glColor3f(oceanColorShade[0], oceanColorShade[1], oceanColorShade[2]);
+        glVertex2f(- WIDTH, - (oceanWaveOffsets * j));
+        for (int i = - WIDTH; i < WIDTH * 2; i += 3) {
+            glVertex2f(i, (sinf(oceanWaveLengths[j]) * 100) - (oceanWaveOffsets * j));
+            if (oceanWaveLengths[j] > 100.0f)
+                oceanWaveLengths[j] = 50.0f;
+            if (i % 2 == 0)
+                oceanWaveLengths[j] += 0.01f;
+        }
+        glVertex2f(WIDTH, -HEIGHT);
+        glEnd();
+    }
+}
+
 void ocean_display() {
     glBegin(GL_POLYGON);
     glColor3f(oceanColor[0], oceanColor[1], oceanColor[2]);
@@ -348,6 +357,7 @@ void ocean_display() {
     glVertex2f(oceanXpos + oceanWidth, oceanYpos + oceanHeight);
     glVertex2f(oceanXpos, oceanYpos + oceanHeight);
     glEnd();
+    ocean_waves_display();
 }
 
 // tree
