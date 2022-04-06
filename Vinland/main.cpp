@@ -4,6 +4,8 @@
 #include <GL/glut.h>
 #include <math.h>
 #include <vector>
+#include <stdlib.h>
+#include <time.h>
 
 using namespace std;
 
@@ -16,6 +18,13 @@ void display();
 void reshape(int, int);
 
 // weather
+int weatherTImer = 0;
+bool clearWeather = true;
+bool rainy = false;
+bool snow = false;
+bool rainedOnce = false;
+
+// time
 int dayTimer = 0;
 int nightTimer = 0;
 bool morning = true;
@@ -596,6 +605,63 @@ void tree_display() {
         tree_leafs_display();
 }
 
+vector <vector <GLfloat> > rainPositions;
+float rainSpeed = 50.0f;
+float rainDropLengths = 50.0f;
+
+void reload_rain_positions() {
+    int j;
+    for (int i = - WIDTH; i <= WIDTH; i += 100) {
+        j = rand() % 100;
+        if (j % 5 == 0) {
+            vector <GLfloat > tmp;
+            tmp.push_back(i);
+            tmp.push_back(HEIGHT);
+            rainPositions.push_back(tmp);
+        }
+    }
+}
+
+void rain_update(int) {
+    glutPostRedisplay();
+    glutTimerFunc(FPS, rain_update, 0);
+    if (rainPositions.empty()) {
+        reload_rain_positions();
+    }
+    else {
+        for (int i = 0; i < rainPositions.size(); i++) {
+            if (rainPositions[i][1] < -HEIGHT)
+                rainPositions.erase(rainPositions.begin() + i);
+            else {
+                rainPositions[i][1] -= rainSpeed;
+            }
+        }
+        if (rainPositions[0][1] < HEIGHT - 100.0f)
+            reload_rain_positions();
+    }
+}
+
+void rain_display() {
+    if (!rainPositions.empty()) {
+        for (int i = 0; i < rainPositions.size(); i++) {
+            glBegin(GL_POLYGON);
+            glColor4f(0.0f, 0.4f, 0.5f, 0.02f);
+            glVertex2f(rainPositions[i][0], rainPositions[i][1]);
+            glVertex2f(rainPositions[i][0] + 5.0f, rainPositions[i][1]);
+            glColor4f(0.0f, 0.2f, 0.5f, 0.03f);
+            glVertex2f(rainPositions[i][0], rainPositions[i][1] + rainDropLengths);
+            glVertex2f(rainPositions[i][0] - 5.0f, rainPositions[i][1] + rainDropLengths);
+            glEnd();
+        }
+    }
+}
+
+// weather
+
+void weather_update(int) {
+
+}
+
 int main(int argc, char **argv) {
     glutInit(&argc, argv);
     glutCreateWindow("Vinland");
@@ -615,6 +681,7 @@ void update() {
     glutTimerFunc(FPS, ocean_update, 0);
     glutTimerFunc(FPS, tree_color_update, 0);
     glutTimerFunc(FPS, tree_update, 0);
+    glutTimerFunc(FPS, rain_update, 0);
 }
 
 void display() {
@@ -630,6 +697,7 @@ void display() {
     ocean_display();
     island_display();
     tree_display();
+    rain_display();
     glFlush();
 }
 
