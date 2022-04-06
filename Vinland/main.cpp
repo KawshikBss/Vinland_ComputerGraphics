@@ -674,7 +674,6 @@ void weather_update(int) {
     if (rainy) {
         rain_update();
     }
-    //cout << weatherTImer << endl;
 }
 
 void weather_display() {
@@ -700,8 +699,7 @@ void update() {
     glutTimerFunc(FPS, bridge_update, 0);
     glutTimerFunc(FPS, ocean_update, 0);
     glutTimerFunc(FPS, tree_color_update, 0);
-    //if (rainedOnce)
-        glutTimerFunc(FPS, tree_update, 0);
+    glutTimerFunc(FPS, tree_update, 0);
     glutTimerFunc(FPS, weather_update, 0);
 }
 
@@ -717,8 +715,7 @@ void display() {
     bridge_display();
     ocean_display();
     island_display();
-    //if (rainedOnce)
-        tree_display();
+    tree_display();
     weather_display();
     glFlush();
 }
