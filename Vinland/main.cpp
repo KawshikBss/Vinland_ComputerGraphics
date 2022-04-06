@@ -139,6 +139,7 @@ void moon_update(int) {
         if (nightTimer >= FPS * 5) {
             midnight = false;
             morning = true;
+            weatherTImer++;
             nightTimer = 0;
         }
     }
@@ -622,9 +623,7 @@ void reload_rain_positions() {
     }
 }
 
-void rain_update(int) {
-    glutPostRedisplay();
-    glutTimerFunc(FPS, rain_update, 0);
+void rain_update() {
     if (rainPositions.empty()) {
         reload_rain_positions();
     }
@@ -659,7 +658,28 @@ void rain_display() {
 // weather
 
 void weather_update(int) {
+    glutPostRedisplay();
+    glutTimerFunc(FPS, weather_update, 0);
+    if (weatherTImer >= 1) {
+        clearWeather = false;
+        rainy = true;
+    }
+    if (weatherTImer >= 2) {
+        clearWeather = true;
+        rainy = false;
+        if (!rainedOnce)
+            rainedOnce = true;
+        weatherTImer = 0;
+    }
+    if (rainy) {
+        rain_update();
+    }
+    //cout << weatherTImer << endl;
+}
 
+void weather_display() {
+    if (rainy)
+        rain_display();
 }
 
 int main(int argc, char **argv) {
@@ -680,8 +700,9 @@ void update() {
     glutTimerFunc(FPS, bridge_update, 0);
     glutTimerFunc(FPS, ocean_update, 0);
     glutTimerFunc(FPS, tree_color_update, 0);
-    glutTimerFunc(FPS, tree_update, 0);
-    glutTimerFunc(FPS, rain_update, 0);
+    //if (rainedOnce)
+        glutTimerFunc(FPS, tree_update, 0);
+    glutTimerFunc(FPS, weather_update, 0);
 }
 
 void display() {
@@ -696,8 +717,9 @@ void display() {
     bridge_display();
     ocean_display();
     island_display();
-    tree_display();
-    rain_display();
+    //if (rainedOnce)
+        tree_display();
+    weather_display();
     glFlush();
 }
 
