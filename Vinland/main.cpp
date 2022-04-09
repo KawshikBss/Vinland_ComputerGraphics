@@ -659,7 +659,7 @@ void rain_display() {
 int cloudCount = 10;
 vector<vector<GLfloat> > clouds;
 GLfloat cloudColor[3] = {0.5f, 0.5f, 0.5f};
-GLfloat cloudColorShade[3] = {0.2f, 0.2f, 0.2f};
+GLfloat cloudColorShade[3] = {1.0f, 1.0f, 1.0f};
 float cloudSpeed = 2.0f;
 float cloudMaxLength = 70.0f;
 float cloudMinLength = 40.0f;
@@ -711,9 +711,7 @@ void cloud_update(int) {
                     clouds.erase(clouds.begin() + i);
                 else
                     clouds[i][0] += cloudSpeed;
-                cout << clouds[i][0] << " " << clouds[i][1] << " " << clouds[i][2] << endl;
             }
-            cout << "en\n";
         }
     }
 }
@@ -724,6 +722,10 @@ void cloud_display() {
         float radiusConst = 0.0f;
         for (int i = 0; i < clouds.size(); i++) {
             for (int j = 0; j < clouds[i][2] / 5; j++) {
+                GLfloat cloudColorTmp[3];
+                cloudColorTmp[0] = cloudColorShade[0];
+                cloudColorTmp[1] = cloudColorShade[1];
+                cloudColorTmp[2] = cloudColorShade[2];
                 if (j < clouds[i][2] / 10)
                     radiusConst = j + 1;
                 else
@@ -731,12 +733,15 @@ void cloud_display() {
                 glBegin(GL_POLYGON);
                 for (int k = 0; k <= cloudSegments / 2; k++) {
                     cloudAngle = 2.0f * 3.141615f * k / cloudSegments;
-                    if (k > cloudSegments / 4)
-                        glColor3f(cloudColor[0], cloudColor[1], cloudColor[2]);
-                    else
-                        glColor3f(cloudColorShade[0], cloudColorShade[1], cloudColorShade[2]);
+                    glColor3f(cloudColorTmp[0], cloudColorTmp[1], cloudColorTmp[2]);
                     glVertex2f(((cloudMinRad * radiusConst) * cosf(cloudAngle)) + clouds[i][0] + (j * 30.0f),
                                ((cloudMinRad * radiusConst) * sinf(cloudAngle)) + clouds[i][1]);
+                    if (cloudColorTmp[0] > cloudColor[0])
+                        cloudColorTmp[0] -= 0.1f;
+                    if (cloudColorTmp[1] > cloudColor[1])
+                        cloudColorTmp[1] -= 0.1f;
+                    if (cloudColorTmp[2] > cloudColor[2])
+                        cloudColorTmp[2] -= 0.1f;
                 }
                 glEnd();
             }
@@ -798,6 +803,7 @@ void display() {
     glLoadIdentity();
     glClearColor(0.0f, 1.0f, 1.0f, 1.0f);
     sky_display();
+    cloud_display();
     if (night || midnight)
         moon_display();
     if (morning || noon || evening)
@@ -807,7 +813,6 @@ void display() {
     island_display();
     tree_display();
     weather_display();
-    cloud_display();
     glFlush();
 }
 
