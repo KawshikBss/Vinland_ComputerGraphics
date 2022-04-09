@@ -644,13 +644,102 @@ void rain_display() {
     if (!rainPositions.empty()) {
         for (int i = 0; i < rainPositions.size(); i++) {
             glBegin(GL_POLYGON);
-            glColor4f(0.0f, 0.4f, 0.5f, 0.02f);
+            glColor4f(0.0f, 0.4f, 0.5f, 0.2f);
             glVertex2f(rainPositions[i][0], rainPositions[i][1]);
             glVertex2f(rainPositions[i][0] + 5.0f, rainPositions[i][1]);
-            glColor4f(0.0f, 0.2f, 0.5f, 0.03f);
+            glColor4f(0.0f, 0.2f, 0.5f, 0.3f);
             glVertex2f(rainPositions[i][0], rainPositions[i][1] + rainDropLengths);
             glVertex2f(rainPositions[i][0] - 5.0f, rainPositions[i][1] + rainDropLengths);
             glEnd();
+        }
+    }
+}
+
+// clouds
+int cloudCount = 10;
+vector<vector<GLfloat> > clouds;
+GLfloat cloudColor[3] = {0.5f, 0.5f, 0.5f};
+GLfloat cloudColorShade[3] = {0.2f, 0.2f, 0.2f};
+float cloudSpeed = 2.0f;
+float cloudMaxLength = 70.0f;
+float cloudMinLength = 40.0f;
+float cloudMaxRad = 30.0f;
+float cloudMinRad = 20.0f;
+float cloudSegments = 100.0f;
+
+void reload_clouds(int xOffset) {
+    float xPos = - WIDTH - (xOffset * 300);
+    float yPos = HEIGHT - (rand() % 100 + 200);
+    float length = rand() % (int)cloudMinLength + (cloudMaxLength - cloudMinLength);
+    vector<GLfloat > tmpPos;
+    tmpPos.push_back(xPos);
+    tmpPos.push_back(yPos);
+    tmpPos.push_back(length);
+    clouds.push_back(tmpPos);
+}
+
+void add_cloud() {
+    float xPos = - WIDTH;
+    float yPos = HEIGHT - (rand() % 100 + 200);
+    float length = rand() % (int)cloudMinLength + (cloudMaxLength - cloudMinLength);
+    vector<GLfloat > tmpPos;
+    tmpPos.push_back(xPos);
+    tmpPos.push_back(yPos);
+    tmpPos.push_back(length);
+    clouds.push_back(tmpPos);
+}
+
+void cloud_update(int) {
+    glutPostRedisplay();
+    glutTimerFunc(FPS, cloud_update, 0);
+    if (clouds.empty()) {
+        for (int i = 0; i < cloudCount; i++) {
+            reload_clouds(i);
+        }
+    }
+    else if (rainy)
+        return;
+    else {
+        if (clouds.size() < cloudCount) {
+            while (clouds.size() < cloudCount) {
+                add_cloud();
+            }
+        }
+        else {
+            for (int i = 0; i < clouds.size(); i++) {
+                if (clouds[i][0] > WIDTH)
+                    clouds.erase(clouds.begin() + i);
+                else
+                    clouds[i][0] += cloudSpeed;
+                cout << clouds[i][0] << " " << clouds[i][1] << " " << clouds[i][2] << endl;
+            }
+            cout << "en\n";
+        }
+    }
+}
+
+void cloud_display() {
+    if (!clouds.empty()) {
+        float cloudAngle;
+        float radiusConst = 0.0f;
+        for (int i = 0; i < clouds.size(); i++) {
+            for (int j = 0; j < clouds[i][2] / 5; j++) {
+                if (j < clouds[i][2] / 10)
+                    radiusConst = j + 1;
+                else
+                    radiusConst = ((clouds[i][2] / 5) - j) + 1;
+                glBegin(GL_POLYGON);
+                for (int k = 0; k <= cloudSegments / 2; k++) {
+                    cloudAngle = 2.0f * 3.141615f * k / cloudSegments;
+                    if (k > cloudSegments / 4)
+                        glColor3f(cloudColor[0], cloudColor[1], cloudColor[2]);
+                    else
+                        glColor3f(cloudColorShade[0], cloudColorShade[1], cloudColorShade[2]);
+                    glVertex2f(((cloudMinRad * radiusConst) * cosf(cloudAngle)) + clouds[i][0] + (j * 30.0f),
+                               ((cloudMinRad * radiusConst) * sinf(cloudAngle)) + clouds[i][1]);
+                }
+                glEnd();
+            }
         }
     }
 }
@@ -701,6 +790,7 @@ void update() {
     glutTimerFunc(FPS, tree_color_update, 0);
     glutTimerFunc(FPS, tree_update, 0);
     glutTimerFunc(FPS, weather_update, 0);
+    glutTimerFunc(FPS, cloud_update, 0);
 }
 
 void display() {
@@ -717,6 +807,7 @@ void display() {
     island_display();
     tree_display();
     weather_display();
+    cloud_display();
     glFlush();
 }
 
