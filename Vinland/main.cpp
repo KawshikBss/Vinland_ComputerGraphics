@@ -51,12 +51,24 @@ void sky_update(int) {
             skyColor[1] += 0.01f;
         if (skyColor[2] < 0.6f)
             skyColor[2] += 0.01f;
+        if (skyColorShade[0] < 0.9f)
+            skyColorShade[0] += 0.1f;
+        if (skyColorShade[1] < 0.9f)
+            skyColorShade[1] += 0.1f;
+        if (skyColorShade[2] < 1.0f)
+            skyColorShade[2] += 0.1f;
     }
     else if (noon && sunYPos <= HEIGHT / 2.0f) {
         if (skyColor[1] > 0.1f)
             skyColor[1] -= 0.01f;
         if (skyColor[2] > 0.1f)
             skyColor[2] -= 0.01f;
+        if (skyColorShade[0] > 0.0f)
+            skyColorShade[0] -= 0.1f;
+        if (skyColorShade[1] > 0.0f)
+            skyColorShade[1] -= 0.1f;
+        if (skyColorShade[2] > 0.5f)
+            skyColorShade[2] -= 0.1f;
     }
 }
 
@@ -305,6 +317,7 @@ void bridge_display() {
 // buildings
 vector <vector<GLfloat > > buildings;
 int buildingsCount = 6;
+float gapBetweenBuildings = 10.0f;
 float buildingMaxHeight = 200.0f;
 float buildingColorShades[6][3] = {
     {0.28f, 0.04f, 0.31},
@@ -327,10 +340,12 @@ void generate_building_positions(int buildingLen) {
     float buildingsGap = WIDTH / buildingLen;
     for (int i = 0; i < buildingLen; i++) {
         vector <GLfloat > tmpPos;
-        tmpPos.push_back(i * buildingsGap); // xPos
-        if (i == 0)
+        if (i == 0) {
+            tmpPos.push_back(i * buildingsGap); // xPos
             tmpPos.push_back(buildingMaxHeight * 3.5);
+        }
         else {
+            tmpPos.push_back((i * buildingsGap) + gapBetweenBuildings); // xPos
             if (i < 3)
                 tmpPos.push_back((i + 1) * buildingMaxHeight);
             else
@@ -357,12 +372,14 @@ void buildings_display() {
             glVertex2f(buildings[i][0], 0.0f);
             glVertex2f(buildings[i][0], buildings[i][1]);
             glColor3f(buildingColors[i][0], buildingColors[i][1], buildingColors[i][2]);
-            if (i < buildings.size() - 1)
-                glVertex2f(buildings[i + 1][0], buildings[i][1]);
+            if (i < buildings.size() - 1) {
+                glVertex2f(buildings[i + 1][0] - gapBetweenBuildings, buildings[i][1]);
+            }
             else
                 glVertex2f(WIDTH, buildings[i][1]);
-            if (i < buildings.size() - 1)
-                glVertex2f(buildings[i + 1][0], 0.0f);
+            if (i < buildings.size() - 1) {
+                glVertex2f(buildings[i + 1][0] - gapBetweenBuildings, 0.0f);
+            }
             else
                 glVertex2f(WIDTH, 0.0f);
             glEnd();
