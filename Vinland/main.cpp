@@ -302,6 +302,22 @@ void bridge_display() {
     bridge_legs_display();
 }
 
+// buildings
+vector <vector<GLfloat > > buildings;
+
+void generate_building_positions(int buldingLen) {
+    for (int i = 0)
+}
+
+void buildings_update(int) {
+    glutPostRedisplay();
+    glutTimerFunc(FPS, buildings_update, 0);
+
+    if (buildings.empty()) {
+
+    }
+}
+
 // ocean
 GLfloat oceanXpos = - WIDTH, oceanYpos = - HEIGHT;
 GLfloat oceanWidth = WIDTH * 2.0f, oceanHeight = HEIGHT + 100.0f;
