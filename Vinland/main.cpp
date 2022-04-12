@@ -304,9 +304,32 @@ void bridge_display() {
 
 // buildings
 vector <vector<GLfloat > > buildings;
+int buildingsCount = 6;
+float buildingMaxHeight = 200.0f;
+float buildingColors[buildingsCount][3] = {
+    {0.38f, 0.14f, 0.41},
+    {0.83f, 0.83, 0.87f},
+    {0.23f, 0.23, 0.18f},
+    {0.33f, 0.24, 0.27f},
+    {0.23f, 0.23, 0.18f},
+    {0.83f, 0.83, 0.87f},
+};
 
-void generate_building_positions(int buldingLen) {
-    for (int i = 0)
+void generate_building_positions(int buildingLen) {
+    float buildingsGap = WIDTH / buildingLen;
+    for (int i = 0; i < buildingLen; i++) {
+        vector <GLfloat > tmpPos;
+        tmpPos.push_back(i * buildingsGap); // xPos
+        if (i == 0)
+            tmpPos.push_back(buildingMaxHeight * 3.5);
+        else {
+            if (i < 3)
+                tmpPos.push_back((i + 1) * buildingMaxHeight);
+            else
+                tmpPos.push_back((i + 1) * buildingMaxHeight / 2);
+        }
+        buildings.push_back(tmpPos);
+    }
 }
 
 void buildings_update(int) {
@@ -314,7 +337,27 @@ void buildings_update(int) {
     glutTimerFunc(FPS, buildings_update, 0);
 
     if (buildings.empty()) {
+        generate_building_positions(buildingsCount);
+    }
+}
 
+void buildings_display() {
+    if (!buildings.empty()) {
+        for (int i = 0; i < buildings.size(); i++) {
+            glBegin(GL_POLYGON);
+            glColor3f(buildingColors[i][0], buildingColors[i][1], buildingColors[i][2]);
+            glVertex2f(buildings[i][0], 0.0f);
+            glVertex2f(buildings[i][0], buildings[i][1]);
+            if (i < buildings.size() - 1)
+                glVertex2f(buildings[i + 1][0], buildings[i][1]);
+            else
+                glVertex2f(WIDTH, buildings[i][1]);
+            if (i < buildings.size() - 1)
+                glVertex2f(buildings[i + 1][0], 0.0f);
+            else
+                glVertex2f(WIDTH, 0.0f);
+            glEnd();
+        }
     }
 }
 
@@ -807,6 +850,7 @@ void update() {
     glutTimerFunc(FPS, moon_update, 0);
     glutTimerFunc(FPS, sun_update, 0);
     glutTimerFunc(FPS, bridge_update, 0);
+    glutTimerFunc(FPS, buildings_update, 0);
     glutTimerFunc(FPS, ocean_update, 0);
     glutTimerFunc(FPS, tree_color_update, 0);
     glutTimerFunc(FPS, tree_update, 0);
@@ -825,6 +869,7 @@ void display() {
     if (morning || noon || evening)
         sun_display();
     bridge_display();
+    buildings_display();
     ocean_display();
     island_display();
     tree_display();
