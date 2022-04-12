@@ -306,7 +306,15 @@ void bridge_display() {
 vector <vector<GLfloat > > buildings;
 int buildingsCount = 6;
 float buildingMaxHeight = 200.0f;
-float buildingColors[buildingsCount][3] = {
+float buildingColorShades[6][3] = {
+    {0.28f, 0.04f, 0.31},
+    {0.73f, 0.73, 0.77f},
+    {0.13f, 0.13, 0.08f},
+    {0.23f, 0.14, 0.17f},
+    {0.13f, 0.13, 0.08f},
+    {0.73f, 0.73, 0.77f},
+};
+float buildingColors[6][3] = {
     {0.38f, 0.14f, 0.41},
     {0.83f, 0.83, 0.87f},
     {0.23f, 0.23, 0.18f},
@@ -345,9 +353,10 @@ void buildings_display() {
     if (!buildings.empty()) {
         for (int i = 0; i < buildings.size(); i++) {
             glBegin(GL_POLYGON);
-            glColor3f(buildingColors[i][0], buildingColors[i][1], buildingColors[i][2]);
+            glColor3f(buildingColorShades[i][0], buildingColorShades[i][1], buildingColorShades[i][2]);
             glVertex2f(buildings[i][0], 0.0f);
             glVertex2f(buildings[i][0], buildings[i][1]);
+            glColor3f(buildingColors[i][0], buildingColors[i][1], buildingColors[i][2]);
             if (i < buildings.size() - 1)
                 glVertex2f(buildings[i + 1][0], buildings[i][1]);
             else
