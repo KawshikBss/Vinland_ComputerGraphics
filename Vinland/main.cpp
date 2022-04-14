@@ -517,6 +517,25 @@ void ocean_display() {
     ocean_waves_display();
 }
 
+// ocean rocks
+void ocean_rocks_display() {
+    glBegin(GL_POLYGON);
+    glColor3f(0.3f, 0.3f, 0.3f);
+    glVertex2f(- WIDTH, 90.0f);
+    glVertex2f(- WIDTH, 100.0f);
+    int j = 0;
+    for (int i = - WIDTH;  i < WIDTH; i += 20) {
+        if (j % 2 == 0)
+            glVertex2f(i, 110.0f);
+        else
+            glVertex2f(i, 100.0f);
+        j++;
+    }
+    glVertex2f(WIDTH, 100.0f);
+    glVertex2f(WIDTH, 90.0f);
+    glEnd();
+}
+
 // island
 GLfloat islandCenterXpos = -WIDTH, islandCenterYpos = -HEIGHT;
 GLfloat islandRadius = WIDTH / 1.5f;
@@ -959,6 +978,7 @@ void display() {
     bridge_display();
     buildings_display();
     ocean_display();
+    ocean_rocks_display();
     island_display();
     tree_display();
     weather_display();
