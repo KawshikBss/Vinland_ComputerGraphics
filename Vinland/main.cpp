@@ -336,6 +336,8 @@ float buildingColors[6][3] = {
     {0.83f, 0.83, 0.87f},
 };
 
+float windowColor[3] = {0.0f, 0.3f, 0.4f};
+
 void generate_building_positions(int buildingLen) {
     float buildingsGap = WIDTH / buildingLen;
     for (int i = 0; i < buildingLen; i++) {
@@ -362,27 +364,58 @@ void buildings_update(int) {
     if (buildings.empty()) {
         generate_building_positions(buildingsCount);
     }
+    if (morning) {
+        if (windowColor[0] > 0.0f)
+            windowColor[0] -= 0.1f;
+        if (windowColor[1] > 0.3f)
+            windowColor[1] -= 0.1f;
+        if (windowColor[2] < 0.4f)
+            windowColor[2] += 0.1f;
+    }
+    else if (night) {
+        if (windowColor[0] < 1.0f)
+            windowColor[0] += 0.1f;
+        if (windowColor[1] < 1.0f)
+            windowColor[1] += 0.1f;
+        if (windowColor[2] > 0.0f)
+            windowColor[2] -= 0.1f;
+    }
 }
 
 void buildings_display() {
     if (!buildings.empty()) {
         for (int i = 0; i < buildings.size(); i++) {
-            glBegin(GL_POLYGON);
-            glColor3f(buildingColorShades[i][0], buildingColorShades[i][1], buildingColorShades[i][2]);
-            glVertex2f(buildings[i][0], 0.0f);
-            glVertex2f(buildings[i][0], buildings[i][1]);
-            glColor3f(buildingColors[i][0], buildingColors[i][1], buildingColors[i][2]);
-            if (i < buildings.size() - 1) {
-                glVertex2f(buildings[i + 1][0] - gapBetweenBuildings, buildings[i][1]);
+            float floorHeight = buildings[i][1] / 4;
+            for (int j = 4; j > 0; j--) {
+                glBegin(GL_POLYGON);
+                glColor3f(buildingColorShades[i][0], buildingColorShades[i][1], buildingColorShades[i][2]);
+                glVertex2f(buildings[i][0], 0.0f);
+                glVertex2f(buildings[i][0], j * floorHeight);
+                glColor3f(buildingColors[i][0], buildingColors[i][1], buildingColors[i][2]);
+                if (i < buildings.size() - 1) {
+                    glVertex2f(buildings[i + 1][0] - gapBetweenBuildings, j * floorHeight);
+                }
+                else
+                    glVertex2f(WIDTH, j * floorHeight);
+                glColor3f(0.0f, 0.0f, 0.0f);
+                if (i < buildings.size() - 1) {
+                    glVertex2f(buildings[i + 1][0] - gapBetweenBuildings, 0.0f);
+                }
+                else
+                    glVertex2f(WIDTH, 0.0f);
+                glEnd();
+                float windowXLim = WIDTH;
+                float windowYLim = j * floorHeight;
+                if (i < buildings.size() - 1)
+                    windowXLim = buildings[i + 1][0] - gapBetweenBuildings;
+                glBegin(GL_POINTS);
+                glColor3f(windowColor[0], windowColor[1], windowColor[2]);
+                for (int k = buildings[i][0] + 30; k < windowXLim; k += 50) {
+                    for (int l = 20.0f; l < windowYLim; l += 20)
+                    glVertex2f(k, l);
+                }
+                glEnd();
             }
-            else
-                glVertex2f(WIDTH, buildings[i][1]);
-            if (i < buildings.size() - 1) {
-                glVertex2f(buildings[i + 1][0] - gapBetweenBuildings, 0.0f);
-            }
-            else
-                glVertex2f(WIDTH, 0.0f);
-            glEnd();
         }
     }
 }
