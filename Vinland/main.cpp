@@ -51,13 +51,52 @@ void sky_update(int) {
             skyColor[1] += 0.01f;
         if (skyColor[2] < 0.6f)
             skyColor[2] += 0.01f;
+        if (skyColorShade[0] < 0.9f)
+            skyColorShade[0] += 0.1f;
+        if (skyColorShade[1] < 0.9f)
+            skyColorShade[1] += 0.1f;
+        if (skyColorShade[2] < 1.0f)
+            skyColorShade[2] += 0.1f;
     }
     else if (noon && sunYPos <= HEIGHT / 2.0f) {
         if (skyColor[1] > 0.1f)
             skyColor[1] -= 0.01f;
         if (skyColor[2] > 0.1f)
             skyColor[2] -= 0.01f;
+        if (skyColorShade[0] > 0.0f)
+            skyColorShade[0] -= 0.1f;
+        if (skyColorShade[1] > 0.0f)
+            skyColorShade[1] -= 0.1f;
+        if (skyColorShade[2] > 0.5f)
+            skyColorShade[2] -= 0.1f;
     }
+}
+
+// stars
+vector <vector <GLfloat > > starPositions;
+
+void load_stars() {
+    for (float i = - WIDTH + 20.0f; i < WIDTH - 20.0f; i += 50.0f) {
+        for (float j = 0.0f; j < HEIGHT - 20.0f; j += 20.0f) {
+            float ranConst = rand() % 20 + 50;
+            if (fmod(i, ranConst) == 0 || fmod(j, ranConst) == 0) {
+                vector <GLfloat > tmpPos;
+                tmpPos.push_back(i);
+                tmpPos.push_back(j);
+                starPositions.push_back(tmpPos);
+            }
+        }
+    }
+}
+
+void stars_display() {
+    if (starPositions.empty())
+        load_stars();
+    glBegin(GL_POINTS);
+    glColor3f(1.0f, 1.0f, 1.0f);
+    for (int i = 0; i < starPositions.size(); i++)
+        glVertex2f(starPositions[i][0], starPositions[i][1]);
+    glEnd();
 }
 
 void sky_display() {
@@ -69,6 +108,8 @@ void sky_display() {
     glVertex2f(skyXPos + skyWidth, skyYPos - skyHeight);
     glVertex2f(skyXPos, skyYPos - skyHeight);
     glEnd();
+    if (!morning && !evening && sunYPos < HEIGHT / 2.0f)
+        stars_display();
 }
 
 // sun functions
@@ -300,6 +341,112 @@ void bridge_display() {
     bridge_arches_display();
     bridge_horizon_display();
     bridge_legs_display();
+}
+
+// buildings
+vector <vector<GLfloat > > buildings;
+int buildingsCount = 6;
+float gapBetweenBuildings = 10.0f;
+float buildingMaxHeight = 200.0f;
+float buildingColorShades[6][3] = {
+    {0.28f, 0.04f, 0.31},
+    {0.73f, 0.73, 0.77f},
+    {0.13f, 0.13, 0.08f},
+    {0.23f, 0.14, 0.17f},
+    {0.13f, 0.13, 0.08f},
+    {0.73f, 0.73, 0.77f},
+};
+float buildingColors[6][3] = {
+    {0.38f, 0.14f, 0.41},
+    {0.83f, 0.83, 0.87f},
+    {0.23f, 0.23, 0.18f},
+    {0.33f, 0.24, 0.27f},
+    {0.23f, 0.23, 0.18f},
+    {0.83f, 0.83, 0.87f},
+};
+
+float windowColor[3] = {0.0f, 0.3f, 0.4f};
+
+void generate_building_positions(int buildingLen) {
+    float buildingsGap = WIDTH / buildingLen;
+    for (int i = 0; i < buildingLen; i++) {
+        vector <GLfloat > tmpPos;
+        if (i == 0) {
+            tmpPos.push_back(i * buildingsGap); // xPos
+            tmpPos.push_back(buildingMaxHeight * 3.5);
+        }
+        else {
+            tmpPos.push_back((i * buildingsGap) + gapBetweenBuildings); // xPos
+            if (i < 3)
+                tmpPos.push_back((i + 1) * buildingMaxHeight);
+            else
+                tmpPos.push_back((i + 1) * buildingMaxHeight / 2);
+        }
+        buildings.push_back(tmpPos);
+    }
+}
+
+void buildings_update(int) {
+    glutPostRedisplay();
+    glutTimerFunc(FPS, buildings_update, 0);
+
+    if (buildings.empty()) {
+        generate_building_positions(buildingsCount);
+    }
+    if (morning) {
+        if (windowColor[0] > 0.0f)
+            windowColor[0] -= 0.1f;
+        if (windowColor[1] > 0.3f)
+            windowColor[1] -= 0.1f;
+        if (windowColor[2] < 0.4f)
+            windowColor[2] += 0.1f;
+    }
+    else if (night) {
+        if (windowColor[0] < 1.0f)
+            windowColor[0] += 0.1f;
+        if (windowColor[1] < 1.0f)
+            windowColor[1] += 0.1f;
+        if (windowColor[2] > 0.0f)
+            windowColor[2] -= 0.1f;
+    }
+}
+
+void buildings_display() {
+    if (!buildings.empty()) {
+        for (int i = 0; i < buildings.size(); i++) {
+            float floorHeight = buildings[i][1] / 4;
+            for (int j = 4; j > 0; j--) {
+                glBegin(GL_POLYGON);
+                glColor3f(buildingColorShades[i][0], buildingColorShades[i][1], buildingColorShades[i][2]);
+                glVertex2f(buildings[i][0], 0.0f);
+                glVertex2f(buildings[i][0], j * floorHeight);
+                glColor3f(buildingColors[i][0], buildingColors[i][1], buildingColors[i][2]);
+                if (i < buildings.size() - 1) {
+                    glVertex2f(buildings[i + 1][0] - gapBetweenBuildings, j * floorHeight);
+                }
+                else
+                    glVertex2f(WIDTH, j * floorHeight);
+                glColor3f(0.0f, 0.0f, 0.0f);
+                if (i < buildings.size() - 1) {
+                    glVertex2f(buildings[i + 1][0] - gapBetweenBuildings, 0.0f);
+                }
+                else
+                    glVertex2f(WIDTH, 0.0f);
+                glEnd();
+                float windowXLim = WIDTH;
+                float windowYLim = j * floorHeight;
+                if (i < buildings.size() - 1)
+                    windowXLim = buildings[i + 1][0] - gapBetweenBuildings;
+                glBegin(GL_POINTS);
+                glColor3f(windowColor[0], windowColor[1], windowColor[2]);
+                for (int k = buildings[i][0] + 30; k < windowXLim; k += 50) {
+                    for (int l = 20.0f; l < windowYLim; l += 20)
+                    glVertex2f(k, l);
+                }
+                glEnd();
+            }
+        }
+    }
 }
 
 // ocean
@@ -791,6 +938,7 @@ void update() {
     glutTimerFunc(FPS, moon_update, 0);
     glutTimerFunc(FPS, sun_update, 0);
     glutTimerFunc(FPS, bridge_update, 0);
+    glutTimerFunc(FPS, buildings_update, 0);
     glutTimerFunc(FPS, ocean_update, 0);
     glutTimerFunc(FPS, tree_color_update, 0);
     glutTimerFunc(FPS, tree_update, 0);
@@ -809,6 +957,7 @@ void display() {
     if (morning || noon || evening)
         sun_display();
     bridge_display();
+    buildings_display();
     ocean_display();
     island_display();
     tree_display();
