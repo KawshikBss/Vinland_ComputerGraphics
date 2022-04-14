@@ -72,6 +72,33 @@ void sky_update(int) {
     }
 }
 
+// stars
+vector <vector <GLfloat > > starPositions;
+
+void load_stars() {
+    for (float i = - WIDTH + 20.0f; i < WIDTH - 20.0f; i += 50.0f) {
+        for (float j = 0.0f; j < HEIGHT - 20.0f; j += 20.0f) {
+            float ranConst = rand() % 20 + 50;
+            if (fmod(i, ranConst) == 0 || fmod(j, ranConst) == 0) {
+                vector <GLfloat > tmpPos;
+                tmpPos.push_back(i);
+                tmpPos.push_back(j);
+                starPositions.push_back(tmpPos);
+            }
+        }
+    }
+}
+
+void stars_display() {
+    if (starPositions.empty())
+        load_stars();
+    glBegin(GL_POINTS);
+    glColor3f(1.0f, 1.0f, 1.0f);
+    for (int i = 0; i < starPositions.size(); i++)
+        glVertex2f(starPositions[i][0], starPositions[i][1]);
+    glEnd();
+}
+
 void sky_display() {
     glBegin(GL_POLYGON);
     glColor3f(skyColor[0], skyColor[1], skyColor[2]);
@@ -81,6 +108,8 @@ void sky_display() {
     glVertex2f(skyXPos + skyWidth, skyYPos - skyHeight);
     glVertex2f(skyXPos, skyYPos - skyHeight);
     glEnd();
+    if (!morning && !evening && sunYPos < HEIGHT / 2.0f)
+        stars_display();
 }
 
 // sun functions
