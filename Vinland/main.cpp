@@ -517,6 +517,52 @@ void buildings_display() {
     }
 }
 
+// boats
+vector <vector <GLfloat > > boats;
+float boatWidth = 80.0f, boatHeight = 40.0f;
+
+void load_boats() {
+    vector <GLfloat> boat;
+    boat.push_back(WIDTH + boatWidth); // boat x pos
+    boat.push_back(- HEIGHT / 2.0f); // boat y pos
+    boat.push_back(boatWidth); // boat width
+    boat.push_back(boatHeight); // boat height
+    boat.push_back(- 1); // boat direction
+    boat.push_back(- WIDTH - boatWidth); // boat x pos limit
+    boats.push_back(boat);
+}
+
+void boats_update() {
+    if (boats.empty())
+        load_boats();
+    else {
+        for (int i = 0; i < boats.size(); i++) {
+            if (boats[i][4] < 0) {
+                if (boats[i][0] > boats[i][5])
+                    boats[i][0]--;
+                else
+                    boats.erase(boats.begin() + i);
+            }
+        }
+    }
+}
+
+void boats_display() {
+    if (!boats.empty()) {
+        for (int i = 0; i < boats.size(); i++) {
+            glBegin(GL_POLYGON);
+            glColor3f(0.0f, 0.0f, 0.0f);
+            glVertex2f(boats[i][0], boats[i][1]);
+            glVertex2f(boats[i][0] + boats[i][2] / 4.0f, boats[i][1]);
+            glVertex2f(boats[i][0] + boats[i][2] / 4.0f, boats[i][1] + boats[i][3] / 4.0f);
+            glVertex2f(boats[i][0] + boats[i][2] / 3.0f, boats[i][1] + boats[i][3] / 4.0f);
+            glVertex2f(boats[i][0] + boats[i][2] / 3.0f, boats[i][1] + boats[i][3]);
+            glVertex2f(boats[i][0] + boats[i][2], boats[i][1] + boats[i][3]);
+            glEnd();
+        }
+    }
+}
+
 // ocean
 GLfloat oceanXpos = - WIDTH, oceanYpos = - HEIGHT;
 GLfloat oceanWidth = WIDTH * 2.0f, oceanHeight = HEIGHT + 100.0f;
@@ -551,7 +597,7 @@ void ocean_update(int) {
         if (oceanColorShade[2] > 0.72f)
             oceanColorShade[2] -= 0.01f;
     }
-
+    boats_update();
 }
 
 void ocean_waves_display() {
@@ -583,6 +629,7 @@ void ocean_display() {
     glVertex2f(oceanXpos, oceanYpos + oceanHeight);
     glEnd();
     ocean_waves_display();
+    boats_display();
 }
 
 // ocean rocks
