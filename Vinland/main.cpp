@@ -280,28 +280,96 @@ void bridge_arches_display() {
 }
 
 // bridge cars
-int carCount = 2;
-float carWidth = 40.0f, carHeight = 20.0f;
-GLfloat carsPos[2][2] = {{bridgeHorizonX - carWidth, bridgeHorizonY + bridgeHorizonHeight},
-                                {0.0f + carWidth, bridgeHorizonY + bridgeHorizonHeight}};
+vector <vector <GLfloat > > bridgeCars;
+vector <vector <GLfloat > > bridgeCarColors;
+float carWidth = 50.0f, carHeight = 20.0f;
 
-void bridge_car_update() {
-    if (carsPos[0][0] < carWidth)
-        carsPos[0][0]++;
-    if (carsPos[1][0] > bridgeHorizonX - carWidth)
-        carsPos[1][0]--;
+void load_bridge_cars() {
+    // 1st car
+    vector <GLfloat > car1;
+    car1.push_back(bridgeHorizonX); // car1 x pos
+    car1.push_back(bridgeHorizonY + bridgeHorizonHeight); // car1 y pos
+    car1.push_back(1); // car1 direction
+    car1.push_back(bridgeHorizonX + bridgeHorizonWidth + carWidth); // car1 last pos
+    vector <GLfloat > car1Color;
+    car1Color.push_back(0.18f);
+    car1Color.push_back(0.11f);
+    car1Color.push_back(0.51f);
+    bridgeCarColors.push_back(car1Color);
+    // 2nd car
+    vector <GLfloat > car2;
+    car2.push_back(bridgeHorizonX + bridgeHorizonWidth); // car2 x pos
+    car2.push_back(bridgeHorizonY + bridgeHorizonHeight); // car2 y pos
+    car2.push_back(-1); // car2 direction
+    car2.push_back(bridgeHorizonX - carWidth); // car2 last pos
+    vector <GLfloat > car2Color;
+    car2Color.push_back(1.0f);
+    car2Color.push_back(0.11f);
+    car2Color.push_back(0.11f);
+    bridgeCarColors.push_back(car2Color);
+
+    bridgeCars.push_back(car1);
+    bridgeCars.push_back(car2);
 }
-// TODO
-void bridge_car_display() {
-    for (int i = 0; i < carCount; i++) {
-        glColor3f(0.0f, 0.0f, 1.0f);
+
+void append_car(int direction) {
+    vector <GLfloat > car;
+    if (direction > 0)
+        car.push_back(bridgeHorizonX);
+    else if (direction < 0)
+        car.push_back(bridgeHorizonX + bridgeHorizonWidth);
+    car.push_back(bridgeHorizonY + bridgeHorizonHeight);
+    car.push_back(direction);
+    if (direction > 0)
+        car.push_back(bridgeHorizonX + bridgeHorizonWidth + carWidth);
+    else if (direction < 0)
+        car.push_back(bridgeHorizonX - carWidth);
+    bridgeCars.push_back(car);
+}
+
+void bridge_cars_update() {
+    if (bridgeCars.empty())
+        load_bridge_cars();
+    else {
+        for (int i = 0; i < bridgeCars.size(); i++) {
+            if (bridgeCars[i][2] > 0) {
+                if (bridgeCars[i][0] < bridgeCars[i][3])
+                    bridgeCars[i][0] += bridgeCars[i][2];
+                else {
+                    bridgeCars.erase(bridgeCars.begin() + i);
+                    append_car(1);
+                }
+            }
+            else if (bridgeCars[i][2] < 0) {
+                if (bridgeCars[i][0] > bridgeCars[i][3])
+                    bridgeCars[i][0] += bridgeCars[i][2];
+                else {
+                    bridgeCars.erase(bridgeCars.begin() + i);
+                    append_car(- 1);
+                }
+            }
+        }
+    }
+}
+
+void bridge_cars_display() {
+    for (int i = 0; i < bridgeCars.size(); i++) {
         glBegin(GL_POLYGON);
-        glVertex2f(carsPos[i][0], carsPos[i][1]);
-        glVertex2f(carsPos[i][0] + carWidth, carsPos[i][1]);
-        glVertex2f(carsPos[i][0] + carWidth / 2.0f, carsPos[i][1]);
-        glVertex2f(carsPos[i][0] + carWidth / 2.0f, carsPos[i][1] + carHeight);
-        glVertex2f(carsPos[i][0] + carWidth, carsPos[i][1] + carHeight);
-        glVertex2f(carsPos[i][0], carsPos[i][1] + carHeight);
+        glColor3f(bridgeCarColors[i][0], bridgeCarColors[i][1], bridgeCarColors[i][2]);
+        if (bridgeCars[i][2] > 0) {
+            glVertex2f(bridgeCars[i][0], bridgeCars[i][1]);
+            glVertex2f(bridgeCars[i][0], bridgeCars[i][1] + carHeight);
+            glVertex2f(bridgeCars[i][0] + carWidth / 2.0f, bridgeCars[i][1] + carHeight);
+            glVertex2f(bridgeCars[i][0] + carWidth, bridgeCars[i][1] + carHeight / 3.0f);
+            glVertex2f(bridgeCars[i][0] + carWidth, bridgeCars[i][1]);
+        }
+        else {
+            glVertex2f(bridgeCars[i][0], bridgeCars[i][1]);
+            glVertex2f(bridgeCars[i][0], bridgeCars[i][1] + carHeight / 3.0f);
+            glVertex2f(bridgeCars[i][0] + carWidth / 2.0f, bridgeCars[i][1] + carHeight);
+            glVertex2f(bridgeCars[i][0] + carWidth, bridgeCars[i][1] + carHeight);
+            glVertex2f(bridgeCars[i][0] + carWidth, bridgeCars[i][1]);
+        }
         glEnd();
     }
 }
@@ -309,7 +377,7 @@ void bridge_car_display() {
 void bridge_update(int) {
     glutPostRedisplay();
     glutTimerFunc(FPS, bridge_update, 0);
-    bridge_car_update();
+    bridge_cars_update();
     if (morning) {
         if (bridgeColor[0] < 1.0f)
             bridgeColor[0] += 0.005f;
@@ -337,7 +405,7 @@ void bridge_update(int) {
 }
 
 void bridge_display() {
-    bridge_car_display();
+    bridge_cars_display();
     bridge_arches_display();
     bridge_horizon_display();
     bridge_legs_display();
