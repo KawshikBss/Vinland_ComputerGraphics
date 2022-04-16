@@ -657,10 +657,10 @@ void ocean_display() {
 void ocean_rocks_display() {
     glBegin(GL_POLYGON);
     glColor3f(0.3f, 0.3f, 0.3f);
-    glVertex2f(- WIDTH, 90.0f);
-    glVertex2f(- WIDTH, 100.0f);
+    glVertex2f(- 10, 90.0f);
+    glVertex2f(- 10, 100.0f);
     int j = 0;
-    for (int i = - WIDTH;  i < WIDTH; i += 20) {
+    for (int i = - 10;  i < WIDTH; i += 20) {
         if (j % 2 == 0)
             glVertex2f(i, 110.0f);
         else
