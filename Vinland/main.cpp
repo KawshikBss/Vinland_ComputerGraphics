@@ -3,7 +3,10 @@
 #include <GL/glu.h>
 #include <GL/glut.h>
 #include <math.h>
-// amar heda
+#include <vector>
+#include <stdlib.h>
+#include <time.h>
+
 using namespace std;
 
 int WIDTH = 1280;
@@ -15,6 +18,13 @@ void display();
 void reshape(int, int);
 
 // weather
+int weatherTImer = 0;
+bool clearWeather = true;
+bool rainy = false;
+bool snow = false;
+bool rainedOnce = false;
+
+// time
 int dayTimer = 0;
 int nightTimer = 0;
 bool morning = true;
@@ -41,13 +51,52 @@ void sky_update(int) {
             skyColor[1] += 0.01f;
         if (skyColor[2] < 0.6f)
             skyColor[2] += 0.01f;
+        if (skyColorShade[0] < 0.9f)
+            skyColorShade[0] += 0.1f;
+        if (skyColorShade[1] < 0.9f)
+            skyColorShade[1] += 0.1f;
+        if (skyColorShade[2] < 1.0f)
+            skyColorShade[2] += 0.1f;
     }
     else if (noon && sunYPos <= HEIGHT / 2.0f) {
         if (skyColor[1] > 0.1f)
             skyColor[1] -= 0.01f;
         if (skyColor[2] > 0.1f)
             skyColor[2] -= 0.01f;
+        if (skyColorShade[0] > 0.0f)
+            skyColorShade[0] -= 0.1f;
+        if (skyColorShade[1] > 0.0f)
+            skyColorShade[1] -= 0.1f;
+        if (skyColorShade[2] > 0.5f)
+            skyColorShade[2] -= 0.1f;
     }
+}
+
+// stars
+vector <vector <GLfloat > > starPositions;
+
+void load_stars() {
+    for (float i = - WIDTH + 20.0f; i < WIDTH - 20.0f; i += 50.0f) {
+        for (float j = 0.0f; j < HEIGHT - 20.0f; j += 20.0f) {
+            float ranConst = rand() % 20 + 50;
+            if (fmod(i, ranConst) == 0 || fmod(j, ranConst) == 0) {
+                vector <GLfloat > tmpPos;
+                tmpPos.push_back(i);
+                tmpPos.push_back(j);
+                starPositions.push_back(tmpPos);
+            }
+        }
+    }
+}
+
+void stars_display() {
+    if (starPositions.empty())
+        load_stars();
+    glBegin(GL_POINTS);
+    glColor3f(1.0f, 1.0f, 1.0f);
+    for (int i = 0; i < starPositions.size(); i++)
+        glVertex2f(starPositions[i][0], starPositions[i][1]);
+    glEnd();
 }
 
 void sky_display() {
@@ -59,6 +108,8 @@ void sky_display() {
     glVertex2f(skyXPos + skyWidth, skyYPos - skyHeight);
     glVertex2f(skyXPos, skyYPos - skyHeight);
     glEnd();
+    if (!morning && !evening && sunYPos < HEIGHT / 2.0f)
+        stars_display();
 }
 
 // sun functions
@@ -129,6 +180,7 @@ void moon_update(int) {
         if (nightTimer >= FPS * 5) {
             midnight = false;
             morning = true;
+            weatherTImer++;
             nightTimer = 0;
         }
     }
@@ -218,6 +270,7 @@ void bridge_arches_display() {
         for (int j = archeSteps; j >= archeSteps / 2; j--) {
             angle = 2.0f * 3.141615f * j / archeSteps;
             glColor3f(bridgeColor[0], bridgeColor[1], bridgeColor[2]);
+            glLineWidth(4.0f);
             glBegin(GL_LINES);
             glVertex2f((radius * cosf(angle) + centerX), (radius * sinf(angle) + centerY));
             glVertex2f((radius * cosf(angle) + centerX), bridgeHorizonY);
@@ -227,28 +280,96 @@ void bridge_arches_display() {
 }
 
 // bridge cars
-int carCount = 2;
-float carWidth = 40.0f, carHeight = 20.0f;
-GLfloat carsPos[2][2] = {{bridgeHorizonX - carWidth, bridgeHorizonY + bridgeHorizonHeight},
-                                {0.0f + carWidth, bridgeHorizonY + bridgeHorizonHeight}};
+vector <vector <GLfloat > > bridgeCars;
+vector <vector <GLfloat > > bridgeCarColors;
+float carWidth = 50.0f, carHeight = 20.0f;
 
-void bridge_car_update() {
-    if (carsPos[0][0] < carWidth)
-        carsPos[0][0]++;
-    if (carsPos[1][0] > bridgeHorizonX - carWidth)
-        carsPos[1][0]--;
+void load_bridge_cars() {
+    // 1st car
+    vector <GLfloat > car1;
+    car1.push_back(bridgeHorizonX); // car1 x pos
+    car1.push_back(bridgeHorizonY + bridgeHorizonHeight); // car1 y pos
+    car1.push_back(1); // car1 direction
+    car1.push_back(bridgeHorizonX + bridgeHorizonWidth + carWidth); // car1 last pos
+    vector <GLfloat > car1Color;
+    car1Color.push_back(0.18f);
+    car1Color.push_back(0.11f);
+    car1Color.push_back(0.51f);
+    bridgeCarColors.push_back(car1Color);
+    // 2nd car
+    vector <GLfloat > car2;
+    car2.push_back(bridgeHorizonX + bridgeHorizonWidth); // car2 x pos
+    car2.push_back(bridgeHorizonY + bridgeHorizonHeight); // car2 y pos
+    car2.push_back(-1); // car2 direction
+    car2.push_back(bridgeHorizonX - carWidth); // car2 last pos
+    vector <GLfloat > car2Color;
+    car2Color.push_back(1.0f);
+    car2Color.push_back(0.11f);
+    car2Color.push_back(0.11f);
+    bridgeCarColors.push_back(car2Color);
+
+    bridgeCars.push_back(car1);
+    bridgeCars.push_back(car2);
 }
-// TODO
-void bridge_car_display() {
-    for (int i = 0; i < carCount; i++) {
-        glColor3f(0.0f, 0.0f, 1.0f);
+
+void append_car(int direction) {
+    vector <GLfloat > car;
+    if (direction > 0)
+        car.push_back(bridgeHorizonX);
+    else if (direction < 0)
+        car.push_back(bridgeHorizonX + bridgeHorizonWidth);
+    car.push_back(bridgeHorizonY + bridgeHorizonHeight);
+    car.push_back(direction);
+    if (direction > 0)
+        car.push_back(bridgeHorizonX + bridgeHorizonWidth + carWidth);
+    else if (direction < 0)
+        car.push_back(bridgeHorizonX - carWidth);
+    bridgeCars.push_back(car);
+}
+
+void bridge_cars_update() {
+    if (bridgeCars.empty())
+        load_bridge_cars();
+    else {
+        for (int i = 0; i < bridgeCars.size(); i++) {
+            if (bridgeCars[i][2] > 0) {
+                if (bridgeCars[i][0] < bridgeCars[i][3])
+                    bridgeCars[i][0] += bridgeCars[i][2];
+                else {
+                    bridgeCars.erase(bridgeCars.begin() + i);
+                    append_car(1);
+                }
+            }
+            else if (bridgeCars[i][2] < 0) {
+                if (bridgeCars[i][0] > bridgeCars[i][3])
+                    bridgeCars[i][0] += bridgeCars[i][2];
+                else {
+                    bridgeCars.erase(bridgeCars.begin() + i);
+                    append_car(- 1);
+                }
+            }
+        }
+    }
+}
+
+void bridge_cars_display() {
+    for (int i = 0; i < bridgeCars.size(); i++) {
         glBegin(GL_POLYGON);
-        glVertex2f(carsPos[i][0], carsPos[i][1]);
-        glVertex2f(carsPos[i][0] + carWidth, carsPos[i][1]);
-        glVertex2f(carsPos[i][0] + carWidth / 2.0f, carsPos[i][1]);
-        glVertex2f(carsPos[i][0] + carWidth / 2.0f, carsPos[i][1] + carHeight);
-        glVertex2f(carsPos[i][0] + carWidth, carsPos[i][1] + carHeight);
-        glVertex2f(carsPos[i][0], carsPos[i][1] + carHeight);
+        glColor3f(bridgeCarColors[i][0], bridgeCarColors[i][1], bridgeCarColors[i][2]);
+        if (bridgeCars[i][2] > 0) {
+            glVertex2f(bridgeCars[i][0], bridgeCars[i][1]);
+            glVertex2f(bridgeCars[i][0], bridgeCars[i][1] + carHeight);
+            glVertex2f(bridgeCars[i][0] + carWidth / 2.0f, bridgeCars[i][1] + carHeight);
+            glVertex2f(bridgeCars[i][0] + carWidth, bridgeCars[i][1] + carHeight / 3.0f);
+            glVertex2f(bridgeCars[i][0] + carWidth, bridgeCars[i][1]);
+        }
+        else {
+            glVertex2f(bridgeCars[i][0], bridgeCars[i][1]);
+            glVertex2f(bridgeCars[i][0], bridgeCars[i][1] + carHeight / 3.0f);
+            glVertex2f(bridgeCars[i][0] + carWidth / 2.0f, bridgeCars[i][1] + carHeight);
+            glVertex2f(bridgeCars[i][0] + carWidth, bridgeCars[i][1] + carHeight);
+            glVertex2f(bridgeCars[i][0] + carWidth, bridgeCars[i][1]);
+        }
         glEnd();
     }
 }
@@ -256,7 +377,7 @@ void bridge_car_display() {
 void bridge_update(int) {
     glutPostRedisplay();
     glutTimerFunc(FPS, bridge_update, 0);
-    bridge_car_update();
+    bridge_cars_update();
     if (morning) {
         if (bridgeColor[0] < 1.0f)
             bridgeColor[0] += 0.005f;
@@ -284,10 +405,676 @@ void bridge_update(int) {
 }
 
 void bridge_display() {
-    bridge_car_display();
+    bridge_cars_display();
     bridge_arches_display();
     bridge_horizon_display();
     bridge_legs_display();
+}
+
+// buildings
+vector <vector<GLfloat > > buildings;
+int buildingsCount = 6;
+float gapBetweenBuildings = 10.0f;
+float buildingMaxHeight = 200.0f;
+float buildingColorShades[6][3] = {
+    {0.28f, 0.04f, 0.31},
+    {0.73f, 0.73, 0.77f},
+    {0.13f, 0.13, 0.08f},
+    {0.23f, 0.14, 0.17f},
+    {0.13f, 0.13, 0.08f},
+    {0.73f, 0.73, 0.77f},
+};
+float buildingColors[6][3] = {
+    {0.38f, 0.14f, 0.41},
+    {0.83f, 0.83, 0.87f},
+    {0.23f, 0.23, 0.18f},
+    {0.33f, 0.24, 0.27f},
+    {0.23f, 0.23, 0.18f},
+    {0.83f, 0.83, 0.87f},
+};
+
+float windowColor[3] = {0.0f, 0.3f, 0.4f};
+
+void generate_building_positions(int buildingLen) {
+    float buildingsGap = WIDTH / buildingLen;
+    for (int i = 0; i < buildingLen; i++) {
+        vector <GLfloat > tmpPos;
+        if (i == 0) {
+            tmpPos.push_back(i * buildingsGap); // xPos
+            tmpPos.push_back(buildingMaxHeight * 3.5);
+        }
+        else {
+            tmpPos.push_back((i * buildingsGap) + gapBetweenBuildings); // xPos
+            if (i < 3)
+                tmpPos.push_back((i + 1) * buildingMaxHeight);
+            else
+                tmpPos.push_back((i + 1) * buildingMaxHeight / 2);
+        }
+        buildings.push_back(tmpPos);
+    }
+}
+
+void buildings_update(int) {
+    glutPostRedisplay();
+    glutTimerFunc(FPS, buildings_update, 0);
+
+    if (buildings.empty()) {
+        generate_building_positions(buildingsCount);
+    }
+    if (morning) {
+        if (windowColor[0] > 0.0f)
+            windowColor[0] -= 0.1f;
+        if (windowColor[1] > 0.3f)
+            windowColor[1] -= 0.1f;
+        if (windowColor[2] < 0.4f)
+            windowColor[2] += 0.1f;
+    }
+    else if (night) {
+        if (windowColor[0] < 1.0f)
+            windowColor[0] += 0.1f;
+        if (windowColor[1] < 1.0f)
+            windowColor[1] += 0.1f;
+        if (windowColor[2] > 0.0f)
+            windowColor[2] -= 0.1f;
+    }
+}
+
+void buildings_display() {
+    if (!buildings.empty()) {
+        for (int i = 0; i < buildings.size(); i++) {
+            float floorHeight = buildings[i][1] / 4;
+            for (int j = 4; j > 0; j--) {
+                glBegin(GL_POLYGON);
+                glColor3f(buildingColorShades[i][0], buildingColorShades[i][1], buildingColorShades[i][2]);
+                glVertex2f(buildings[i][0], 0.0f);
+                glVertex2f(buildings[i][0], j * floorHeight);
+                glColor3f(buildingColors[i][0], buildingColors[i][1], buildingColors[i][2]);
+                if (i < buildings.size() - 1) {
+                    glVertex2f(buildings[i + 1][0] - gapBetweenBuildings, j * floorHeight);
+                }
+                else
+                    glVertex2f(WIDTH, j * floorHeight);
+                glColor3f(0.0f, 0.0f, 0.0f);
+                if (i < buildings.size() - 1) {
+                    glVertex2f(buildings[i + 1][0] - gapBetweenBuildings, 0.0f);
+                }
+                else
+                    glVertex2f(WIDTH, 0.0f);
+                glEnd();
+                float windowXLim = WIDTH;
+                float windowYLim = j * floorHeight;
+                if (i < buildings.size() - 1)
+                    windowXLim = buildings[i + 1][0] - gapBetweenBuildings;
+                glBegin(GL_POINTS);
+                glColor3f(windowColor[0], windowColor[1], windowColor[2]);
+                for (int k = buildings[i][0] + 30; k < windowXLim; k += 50) {
+                    for (int l = 20.0f; l < windowYLim; l += 20)
+                    glVertex2f(k, l);
+                }
+                glEnd();
+            }
+        }
+    }
+}
+
+// boats
+vector <vector <GLfloat > > boats;
+float boatWidth = 200.0f, boatHeight = 80.0f;
+GLfloat boatsBaseColor[3] = {0.31f, 0.62f, 0.7f};
+GLfloat boatsTopColor[3] = {0.6f, 0.0f, 0.0f};
+GLfloat boatsWindowColor[3] = {0.0f, 0.2f, 0.7f};
+GLfloat boatsWindowColorShade[3] = {0.49f, 0.97f, 1.0f};
+
+void load_boats() {
+    vector <GLfloat> boat;
+    boat.push_back(WIDTH + boatWidth); // boat x pos
+    boat.push_back(boatWidth); // boat width
+    boat.push_back(boatHeight); // boat height
+    boat.push_back(- 2); // boat direction and speed
+    boat.push_back(- WIDTH - boatWidth); // boat x pos limit
+    boats.push_back(boat);
+}
+
+void boats_update() {
+    if (boats.empty())
+        load_boats();
+    else {
+        for (int i = 0; i < boats.size(); i++) {
+            if (boats[i][3] < 0) {
+                if (boats[i][0] > boats[i][4])
+                    boats[i][0] += boats[i][3];
+                else
+                    boats.erase(boats.begin() + i);
+            }
+        }
+    }
+}
+
+void boats_display(float yPos) {
+    if (!boats.empty()) {
+        for (int i = 0; i < boats.size(); i++) {
+            glColor3f(boatsTopColor[0], boatsTopColor[1], boatsTopColor[2]);
+            glBegin(GL_POLYGON);
+            glVertex2f(boats[i][0], yPos);
+            glVertex2f(boats[i][0] + boats[i][1], yPos);
+            glVertex2f(boats[i][0] + (boats[i][1] - (boats[i][1] / 5.0f)), yPos - boats[i][2] / 2.0f);
+            glColor3f(boatsBaseColor[0], boatsBaseColor[1], boatsBaseColor[2]);
+            glVertex2f(boats[i][0] + (boats[i][1] / 5.0f), yPos - boats[i][2] / 2.0f);
+            glEnd();
+            glBegin(GL_POLYGON);
+            glColor3f(boatsTopColor[0], boatsTopColor[1], boatsTopColor[2]);
+            glVertex2f(boats[i][0] + (boats[i][1] / 6.0f), yPos);
+            glVertex2f(boats[i][0] + (boats[i][1] / 3.0f), yPos + boats[i][2] / 3.0f);
+            glVertex2f(boats[i][0] + boats[i][1] - (boats[i][1] / 4.0f), yPos + boats[i][2] / 3.0f);
+            glVertex2f(boats[i][0] + boats[i][1], yPos);
+            glEnd();
+            glBegin(GL_POLYGON);
+            glColor3f(boatsWindowColor[0], boatsWindowColor[1], boatsWindowColor[2]);
+            glVertex2f(boats[i][0] + (boats[i][1] / 6.0f) + 10, yPos);
+            glVertex2f(boats[i][0] + (boats[i][1] / 3.0f) + 10, yPos + boats[i][2] / 3.0f - 5);
+            glVertex2f(boats[i][0] + boats[i][1] - (boats[i][1] / 4.0f) - 10, yPos + boats[i][2] / 3.0f - 5);
+            glColor3f(boatsWindowColorShade[0], boatsWindowColorShade[1], boatsWindowColorShade[2]);
+            glVertex2f(boats[i][0] + boats[i][1] - 10, yPos);
+            glVertex2f(boats[i][0] + (boats[i][1] / 3.0f) + 10, yPos - 10);
+            glEnd();
+        }
+    }
+}
+
+// ocean
+GLfloat oceanXpos = - WIDTH, oceanYpos = - HEIGHT;
+GLfloat oceanWidth = WIDTH * 2.0f, oceanHeight = HEIGHT + 100.0f;
+float oceanWaveOffsets = HEIGHT / 4.0f;
+float oceanWaveLengths[4] = {50.0f, 50.0f, 50.0f, 50.0f};
+GLfloat oceanColor[3] = {0.0f, 0.5f, 1.0f};
+GLfloat oceanColorShade[3] = {0.49f, 0.97f, 1.0f};
+
+void ocean_update(int) {
+    glutTimerFunc(FPS, ocean_update, 0);
+    if (morning) {
+        if (oceanColor[1] < 0.5f)
+            oceanColor[1] += 0.01f;
+        if (oceanColor[2] < 1.0f)
+            oceanColor[2] += 0.01f;
+        if (oceanColorShade[0] < 0.49f)
+            oceanColorShade[0] += 0.01f;
+        if (oceanColorShade[1] < 0.97f)
+            oceanColorShade[1] += 0.01f;
+        if (oceanColorShade[2] < 1.0f)
+            oceanColorShade[2] += 0.01f;
+    }
+    else if (noon && sunYPos <= HEIGHT / 2.0f) {
+        if (oceanColor[1] > 0.0f)
+            oceanColor[1] -= 0.01f;
+        if (oceanColor[2] > 0.5f)
+            oceanColor[2] -= 0.01f;
+        if (oceanColorShade[0] > 0.05f)
+            oceanColorShade[0] -= 0.01f;
+        if (oceanColorShade[1] > 0.32f)
+            oceanColorShade[1] -= 0.01f;
+        if (oceanColorShade[2] > 0.72f)
+            oceanColorShade[2] -= 0.01f;
+    }
+    boats_update();
+}
+
+void ocean_waves_display() {
+    for (int j = 0; j < 4; j++) {
+        if (j == 1) {
+            boats_display(((sinf(oceanWaveLengths[j]) * 100) - (oceanWaveOffsets * j)) / 7.0f - 100.0f);
+        }
+        glBegin(GL_POLYGON);
+        glColor3f(oceanColor[0], oceanColor[1], oceanColor[2]);
+        glVertex2f(- WIDTH, -HEIGHT);
+        glColor3f(oceanColorShade[0], oceanColorShade[1], oceanColorShade[2]);
+        glVertex2f(- WIDTH, - (oceanWaveOffsets * j));
+        for (int i = - WIDTH; i < WIDTH * 2; i += 3) {
+            glVertex2f(i * (j + 1), (sinf(oceanWaveLengths[j]) * 100) - (oceanWaveOffsets * j));
+            if (oceanWaveLengths[j] > 100.0f)
+                oceanWaveLengths[j] = 50.0f;
+            if (i % 2 == 0)
+                oceanWaveLengths[j] += 0.01f;
+        }
+        glVertex2f(WIDTH, -HEIGHT);
+        glEnd();
+    }
+}
+
+void ocean_display() {
+    glBegin(GL_POLYGON);
+    glColor3f(oceanColor[0], oceanColor[1], oceanColor[2]);
+    glVertex2f(oceanXpos, oceanYpos);
+    glVertex2f(oceanXpos + oceanWidth, oceanYpos);
+    glColor3f(oceanColorShade[0], oceanColorShade[1], oceanColorShade[2]);
+    glVertex2f(oceanXpos + oceanWidth, oceanYpos + oceanHeight);
+    glVertex2f(oceanXpos, oceanYpos + oceanHeight);
+    glEnd();
+    ocean_waves_display();
+    //boats_display();
+}
+
+// ocean rocks
+void ocean_rocks_display() {
+    glBegin(GL_POLYGON);
+    glColor3f(0.3f, 0.3f, 0.3f);
+    glVertex2f(- WIDTH, 90.0f);
+    glVertex2f(- WIDTH, 100.0f);
+    int j = 0;
+    for (int i = - WIDTH;  i < WIDTH; i += 20) {
+        if (j % 2 == 0)
+            glVertex2f(i, 110.0f);
+        else
+            glVertex2f(i, 100.0f);
+        j++;
+    }
+    glVertex2f(WIDTH, 100.0f);
+    glVertex2f(WIDTH, 90.0f);
+    glEnd();
+}
+
+// island
+GLfloat islandCenterXpos = -WIDTH, islandCenterYpos = -HEIGHT;
+GLfloat islandRadius = WIDTH / 1.5f;
+float islandSegments = 20.0f, islandAngle;
+GLfloat islandGrassColor[3] = {0.18f, 0.54f, 0.34f};
+GLfloat islandGrassColorShade[3] = {0.67f, 1.0f, 0.18f};
+
+void island_display() {
+    glColor3f(0.8f, 0.3f, 0.2f);
+    glBegin(GL_POLYGON);
+    for (int i = islandSegments / 4; i >= 0; i--) {
+        islandAngle = 2.0f * 3.141615f * i / islandSegments;
+        if (i % 2 == 0)
+            glVertex2f(((islandRadius + 10.0f + (i * 100)) * cosf(islandAngle) + islandCenterXpos), ((islandRadius) * sinf(islandAngle) + islandCenterYpos));
+        else
+            glVertex2f(((islandRadius + 10.0f) * cosf(islandAngle) + islandCenterXpos), ((islandRadius + 10.0f) * sinf(islandAngle) + islandCenterYpos));
+    }
+    glVertex2f(- WIDTH, - HEIGHT);
+    glEnd();
+
+    glBegin(GL_POLYGON);
+    glColor3f(islandGrassColorShade[0], islandGrassColorShade[1], islandGrassColorShade[2]);
+    for (int i = islandSegments / 4; i >= 0; i--) {
+        islandAngle = 2.0f * 3.141615f * i / islandSegments;
+        if (i <= islandSegments / 8)
+            glColor3f(islandGrassColor[0], islandGrassColor[1], islandGrassColor[2]);
+        if (i % 2 == 0)
+            glVertex2f(((islandRadius + (i * 100)) * cosf(islandAngle) + islandCenterXpos), (islandRadius * sinf(islandAngle) + islandCenterYpos));
+        else
+            glVertex2f((islandRadius * cosf(islandAngle) + islandCenterXpos), (islandRadius * sinf(islandAngle) + islandCenterYpos));
+    }
+    glVertex2f(- WIDTH, - HEIGHT);
+    glEnd();
+}
+
+// tree
+GLfloat treeStartXpos = - WIDTH / 1.5f, treeStartYpos = - HEIGHT / 2.0f;
+GLfloat treeTrunkHeight = 100.0f;
+GLfloat treeTrunkBotttomWidth = 25.0f, treeTrunkTopWidth = treeTrunkBotttomWidth;
+GLfloat treeBranchLength = 70.0f, treeBranchStartWidth = 20.0f;
+int treeLeafSegmentsMax = 100;
+float treeLeafSegments = 0.0f;
+GLfloat treeGrowthRate = 1.0f;
+GLfloat treeBranchArea[4] = {treeStartXpos + 250.0f, treeStartYpos + treeTrunkHeight, treeStartXpos - 250.f, treeStartXpos + (2 * treeTrunkHeight)};
+GLfloat treeColor[3] = {0.36f, 0.25f, 0.2f};
+GLfloat treeColorShade[3] = {0.82f, 0.49f, 0.17f};
+GLfloat treeLeafColor[3] = {0.0f, 1.0f, 0.49f};
+GLfloat treeLeafColorShade[3] = {0.23f, 0.8f, 0.44f};
+int growthTimer = 0;
+bool treeBranchesGrown = false;
+
+vector<vector<GLfloat> > treePositions;
+vector<vector<GLfloat> > treeBranchPositions;
+vector<vector<GLfloat> > treeLeafPositions;
+
+void tree_color_update(int) {
+    glutTimerFunc(FPS, tree_color_update, 0);
+    if (morning) {
+        if (treeColor[0] > 0.36f)
+            treeColor[0] -= 0.01f;
+        if (treeColor[1] > 0.25f)
+            treeColor[1] -= 0.01f;
+        if (treeColor[2] < 0.2f)
+            treeColor[2] += 0.01f;
+        if (treeColorShade[0] < 0.82f)
+            treeColorShade[0] += 0.01f;
+        if (treeColorShade[1] < 0.49f)
+            treeColorShade[1] += 0.01f;
+        if (treeColorShade[2] < 0.17f)
+            treeColorShade[2] += 0.01f;
+    }
+    else if (noon && sunYPos <= HEIGHT / 2.0f) {
+        if (treeColor[0] < 0.5f)
+            treeColor[0] += 0.01f;
+        if (treeColor[1] < 0.27f)
+            treeColor[1] += 0.01f;
+        if (treeColor[2] > 0.1f)
+            treeColor[2] -= 0.01f;
+        if (treeColorShade[0] > 0.64f)
+            treeColorShade[0] -= 0.01f;
+        if (treeColorShade[1] > 0.16f)
+            treeColorShade[1] -= 0.01f;
+        if (treeColorShade[2] > 0.16f)
+            treeColorShade[2] -= 0.01f;
+    }
+}
+
+void tree_update(int) {
+    if (treePositions.empty()) {
+        vector<GLfloat> tmp;
+        tmp.push_back(treeStartXpos);
+        tmp.push_back(treeStartYpos);
+        treePositions.push_back(tmp);
+    }
+    glutPostRedisplay();
+    glutTimerFunc(FPS, tree_update, 0);
+    if (!morning && sunYPos <= HEIGHT / 1.2f)
+        return;
+    GLfloat lastXpos = treePositions[treePositions.size() - 1][0];
+    GLfloat lastYpos = treePositions[treePositions.size() - 1][1];
+    if (lastXpos == treePositions[0][0] && lastYpos <= treeTrunkHeight) {
+        vector<GLfloat> tmpPos;
+        tmpPos.push_back(lastXpos);
+        tmpPos.push_back(lastYpos + treeGrowthRate);
+        treePositions.push_back(tmpPos);
+        if (treeTrunkTopWidth >= 5.0f)
+            treeTrunkTopWidth -= 0.05f;
+    }
+    else {
+        if (treeBranchPositions.empty()) {
+            for (int i = 0; i < treePositions.size(); i++) {
+                if (i % 50 == 0 && i >= 200) {
+                    vector<GLfloat> tmp;
+                    tmp.push_back(treePositions[i][0]); // x1
+                    tmp.push_back(treePositions[i][1]); // y1
+                    tmp.push_back(treePositions[i][0]); // x2
+                    tmp.push_back(treePositions[i][1] - treeBranchStartWidth); // y2
+                    tmp.push_back(treePositions[i][0]); // x3
+                    tmp.push_back(treePositions[i][1]); // y3
+                    tmp.push_back(treePositions[i][0]); // x4
+                    tmp.push_back(treePositions[i][1] - treeBranchStartWidth); // y4
+                    treeBranchPositions.push_back(tmp);
+                    vector<GLfloat> tmp2;
+                    tmp2.push_back(treePositions[i][0]); // x1
+                    tmp2.push_back(treePositions[i][1]); // y1
+                    tmp2.push_back(treePositions[i][0]); // x2
+                    tmp2.push_back(treePositions[i][1] - treeBranchStartWidth); // y2
+                    tmp2.push_back(treePositions[i][0]); // x3
+                    tmp2.push_back(treePositions[i][1]); // y3
+                    tmp2.push_back(treePositions[i][0]); // x4
+                    tmp2.push_back(treePositions[i][1] - treeBranchStartWidth); // y4
+                    treeBranchPositions.push_back(tmp2);
+                }
+            }
+        }
+        else {
+            if (!treeBranchesGrown) {
+                for (int i = 0; i < treeBranchPositions.size(); i++) {
+                    if (i % 2 == 0) {
+                        if (treeBranchPositions[i][5] <= treeBranchLength && treeBranchPositions[i][7] <= treeBranchLength) {
+                            treeBranchPositions[i][4] += treeGrowthRate;
+                            treeBranchPositions[i][5] += treeGrowthRate;
+                            treeBranchPositions[i][6] += treeGrowthRate;
+                            treeBranchPositions[i][7] += treeGrowthRate;
+                        }
+                    }
+                    else {
+                        if (treeBranchPositions[i][5] <= treeBranchLength && treeBranchPositions[i][7] <= treeBranchLength) {
+                            treeBranchPositions[i][4] -= treeGrowthRate;
+                            treeBranchPositions[i][5] += treeGrowthRate;
+                            treeBranchPositions[i][6] -= treeGrowthRate;
+                            treeBranchPositions[i][7] += treeGrowthRate;
+                        }
+                    }
+                }
+                if (abs(treeBranchPositions[0][7] - treeBranchPositions[0][3]) >= 351)
+                    treeBranchesGrown = true;
+            }
+        }
+        if (treeBranchesGrown) {
+            if (treeLeafPositions.empty()) {
+                for (int i = 0; i < treeBranchPositions.size(); i++) {
+                    vector<GLfloat> tmp;
+                    tmp.push_back(treeBranchPositions[i][6]);
+                    tmp.push_back(treeBranchPositions[i][7]);
+                    treeLeafPositions.push_back(tmp);
+                }
+            }
+        }
+    }
+}
+
+void tree_trunk_display() {
+    glBegin(GL_POLYGON);
+    glColor3f(treeColor[0], treeColor[1], treeColor[2]);
+    glVertex2f(treePositions[0][0] - treeTrunkBotttomWidth, treePositions[0][1]);
+    glVertex2f(treePositions[0][0] + treeTrunkBotttomWidth, treePositions[0][1]);
+    glColor3f(treeColorShade[0], treeColorShade[1], treeColorShade[2]);
+    glVertex2f(treePositions[treePositions.size() - 1][0] + treeTrunkTopWidth, treePositions[treePositions.size() - 1][1]);
+    glVertex2f(treePositions[treePositions.size() - 1][0] - treeTrunkTopWidth, treePositions[treePositions.size() - 1][1]);
+    glEnd();
+}
+
+void tree_branch_display() {
+    for (int i = 0; i < treeBranchPositions.size(); i++) {
+        glBegin(GL_POLYGON);
+        glColor3f(treeColor[0], treeColor[1], treeColor[2]);
+        glVertex2f(treeBranchPositions[i][0], treeBranchPositions[i][1]);
+        glVertex2f(treeBranchPositions[i][2], treeBranchPositions[i][3]);
+        glColor3f(treeColorShade[0], treeColorShade[1], treeColorShade[2]);
+        glVertex2f(treeBranchPositions[i][4], treeBranchPositions[i][5]);
+        glVertex2f(treeBranchPositions[i][6], treeBranchPositions[i][7]);
+        glEnd();
+    }
+}
+
+void tree_leafs_display() {
+    float leafAngle, leafRadius;
+    if (treeLeafSegments < treeLeafSegmentsMax)
+        treeLeafSegments += 0.8f;
+    for (int i = 0; i < treeLeafPositions.size(); i++) {
+        GLfloat treeLeafColorTmp[3];
+        treeLeafColorTmp[0] = treeLeafColor[0];
+        treeLeafColorTmp[1] = treeLeafColor[1];
+        treeLeafColorTmp[2] = treeLeafColor[2];
+        glBegin(GL_POLYGON);
+        for (int j = 0; j < treeLeafSegments; j++) {
+            /*if (j < treeLeafSegments / 2)
+                glColor3f(treeLeafColor[0], treeLeafColor[1], treeLeafColor[2]);
+            else
+                glColor3f(treeLeafColorShade[0], treeLeafColorShade[1], treeLeafColorShade[2]);*/
+            glColor3f(treeLeafColorTmp[0], treeLeafColorTmp[1], treeLeafColorTmp[2]);
+            leafAngle = 2.0f * 3.141615f * j / 100;
+            leafRadius = (15 * (i + 1));
+            if (j % 10 == 0)
+                glVertex2f((leafRadius * cosf(leafAngle)) + treeLeafPositions[i][0], (leafRadius * sinf(leafAngle)) + treeLeafPositions[i][1]);
+            else if (j % 5 == 0)
+                glVertex2f((leafRadius * cosf(leafAngle)) / 2 + treeLeafPositions[i][0], (leafRadius * sinf(leafAngle)) / 2 + treeLeafPositions[i][1]);
+            if (treeLeafColorTmp[0] < treeLeafColorShade[0])
+                treeLeafColorTmp[0] += 0.01f;
+            if (treeLeafColorTmp[1] > treeLeafColorShade[1])
+                treeLeafColorTmp[1] -= 0.01f;
+            if (treeLeafColorTmp[2] > treeLeafColorShade[2])
+                treeLeafColorTmp[2] -= 0.01f;
+        }
+        glEnd();
+    }
+}
+
+void tree_display() {
+    tree_branch_display();
+    tree_trunk_display();
+    if (treeBranchesGrown)
+        tree_leafs_display();
+}
+
+vector <vector <GLfloat> > rainPositions;
+float rainSpeed = 50.0f;
+float rainDropLengths = 50.0f;
+
+void reload_rain_positions() {
+    int j;
+    for (int i = - WIDTH; i <= WIDTH; i += 100) {
+        j = rand() % 100;
+        if (j % 5 == 0) {
+            vector <GLfloat > tmp;
+            tmp.push_back(i);
+            tmp.push_back(HEIGHT);
+            rainPositions.push_back(tmp);
+        }
+    }
+}
+
+void rain_update() {
+    if (rainPositions.empty()) {
+        reload_rain_positions();
+    }
+    else {
+        for (int i = 0; i < rainPositions.size(); i++) {
+            if (rainPositions[i][1] < -HEIGHT)
+                rainPositions.erase(rainPositions.begin() + i);
+            else {
+                rainPositions[i][1] -= rainSpeed;
+            }
+        }
+        if (rainPositions[0][1] < HEIGHT - 100.0f)
+            reload_rain_positions();
+    }
+}
+
+void rain_display() {
+    if (!rainPositions.empty()) {
+        for (int i = 0; i < rainPositions.size(); i++) {
+            glBegin(GL_POLYGON);
+            glColor4f(0.0f, 0.4f, 0.5f, 0.2f);
+            glVertex2f(rainPositions[i][0], rainPositions[i][1]);
+            glVertex2f(rainPositions[i][0] + 5.0f, rainPositions[i][1]);
+            glColor4f(0.0f, 0.2f, 0.5f, 0.3f);
+            glVertex2f(rainPositions[i][0], rainPositions[i][1] + rainDropLengths);
+            glVertex2f(rainPositions[i][0] - 5.0f, rainPositions[i][1] + rainDropLengths);
+            glEnd();
+        }
+    }
+}
+
+// clouds
+int cloudCount = 10;
+vector<vector<GLfloat> > clouds;
+GLfloat cloudColor[3] = {0.5f, 0.5f, 0.5f};
+GLfloat cloudColorShade[3] = {1.0f, 1.0f, 1.0f};
+float cloudSpeed = 2.0f;
+float cloudMaxLength = 70.0f;
+float cloudMinLength = 40.0f;
+float cloudMaxRad = 30.0f;
+float cloudMinRad = 20.0f;
+float cloudSegments = 100.0f;
+
+void reload_clouds(int xOffset) {
+    float xPos = - WIDTH - (xOffset * 300);
+    float yPos = HEIGHT - (rand() % 100 + 200);
+    float length = rand() % (int)cloudMinLength + (cloudMaxLength - cloudMinLength);
+    vector<GLfloat > tmpPos;
+    tmpPos.push_back(xPos);
+    tmpPos.push_back(yPos);
+    tmpPos.push_back(length);
+    clouds.push_back(tmpPos);
+}
+
+void add_cloud() {
+    float xPos = - WIDTH;
+    float yPos = HEIGHT - (rand() % 100 + 200);
+    float length = rand() % (int)cloudMinLength + (cloudMaxLength - cloudMinLength);
+    vector<GLfloat > tmpPos;
+    tmpPos.push_back(xPos);
+    tmpPos.push_back(yPos);
+    tmpPos.push_back(length);
+    clouds.push_back(tmpPos);
+}
+
+void cloud_update(int) {
+    glutPostRedisplay();
+    glutTimerFunc(FPS, cloud_update, 0);
+    if (clouds.empty()) {
+        for (int i = 0; i < cloudCount; i++) {
+            reload_clouds(i);
+        }
+    }
+    else if (rainy)
+        return;
+    else {
+        if (clouds.size() < cloudCount) {
+            while (clouds.size() < cloudCount) {
+                add_cloud();
+            }
+        }
+        else {
+            for (int i = 0; i < clouds.size(); i++) {
+                if (clouds[i][0] > WIDTH)
+                    clouds.erase(clouds.begin() + i);
+                else
+                    clouds[i][0] += cloudSpeed;
+            }
+        }
+    }
+}
+
+void cloud_display() {
+    if (!clouds.empty()) {
+        float cloudAngle;
+        float radiusConst = 0.0f;
+        for (int i = 0; i < clouds.size(); i++) {
+            for (int j = 0; j < clouds[i][2] / 5; j++) {
+                GLfloat cloudColorTmp[3];
+                cloudColorTmp[0] = cloudColorShade[0];
+                cloudColorTmp[1] = cloudColorShade[1];
+                cloudColorTmp[2] = cloudColorShade[2];
+                if (j < clouds[i][2] / 10)
+                    radiusConst = j + 1;
+                else
+                    radiusConst = ((clouds[i][2] / 5) - j) + 1;
+                glBegin(GL_POLYGON);
+                for (int k = 0; k <= cloudSegments / 2; k++) {
+                    cloudAngle = 2.0f * 3.141615f * k / cloudSegments;
+                    glColor3f(cloudColorTmp[0], cloudColorTmp[1], cloudColorTmp[2]);
+                    glVertex2f(((cloudMinRad * radiusConst) * cosf(cloudAngle)) + clouds[i][0] + (j * 30.0f),
+                               ((cloudMinRad * radiusConst) * sinf(cloudAngle)) + clouds[i][1]);
+                    if (cloudColorTmp[0] > cloudColor[0])
+                        cloudColorTmp[0] -= 0.1f;
+                    if (cloudColorTmp[1] > cloudColor[1])
+                        cloudColorTmp[1] -= 0.1f;
+                    if (cloudColorTmp[2] > cloudColor[2])
+                        cloudColorTmp[2] -= 0.1f;
+                }
+                glEnd();
+            }
+        }
+    }
+}
+
+// weather
+
+void weather_update(int) {
+    glutPostRedisplay();
+    glutTimerFunc(FPS, weather_update, 0);
+    if (weatherTImer >= 1) {
+        clearWeather = false;
+        rainy = true;
+    }
+    if (weatherTImer >= 2) {
+        clearWeather = true;
+        rainy = false;
+        if (!rainedOnce)
+            rainedOnce = true;
+        weatherTImer = 0;
+    }
+    if (rainy) {
+        rain_update();
+    }
+}
+
+void weather_display() {
+    if (rainy)
+        rain_display();
 }
 
 int main(int argc, char **argv) {
@@ -306,6 +1093,12 @@ void update() {
     glutTimerFunc(FPS, moon_update, 0);
     glutTimerFunc(FPS, sun_update, 0);
     glutTimerFunc(FPS, bridge_update, 0);
+    glutTimerFunc(FPS, buildings_update, 0);
+    glutTimerFunc(FPS, ocean_update, 0);
+    glutTimerFunc(FPS, tree_color_update, 0);
+    glutTimerFunc(FPS, tree_update, 0);
+    glutTimerFunc(FPS, weather_update, 0);
+    glutTimerFunc(FPS, cloud_update, 0);
 }
 
 void display() {
@@ -313,11 +1106,18 @@ void display() {
     glLoadIdentity();
     glClearColor(0.0f, 1.0f, 1.0f, 1.0f);
     sky_display();
+    cloud_display();
     if (night || midnight)
         moon_display();
     if (morning || noon || evening)
         sun_display();
     bridge_display();
+    buildings_display();
+    ocean_display();
+    ocean_rocks_display();
+    island_display();
+    tree_display();
+    weather_display();
     glFlush();
 }
 
