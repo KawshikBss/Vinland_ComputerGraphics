@@ -519,15 +519,18 @@ void buildings_display() {
 
 // boats
 vector <vector <GLfloat > > boats;
-float boatWidth = 80.0f, boatHeight = 40.0f;
+float boatWidth = 200.0f, boatHeight = 80.0f;
+GLfloat boatsBaseColor[3] = {0.31f, 0.62f, 0.7f};
+GLfloat boatsTopColor[3] = {0.6f, 0.0f, 0.0f};
+GLfloat boatsWindowColor[3] = {0.0f, 0.2f, 0.7f};
+GLfloat boatsWindowColorShade[3] = {0.49f, 0.97f, 1.0f};
 
 void load_boats() {
     vector <GLfloat> boat;
     boat.push_back(WIDTH + boatWidth); // boat x pos
-    boat.push_back(- HEIGHT / 2.0f); // boat y pos
     boat.push_back(boatWidth); // boat width
     boat.push_back(boatHeight); // boat height
-    boat.push_back(- 1); // boat direction
+    boat.push_back(- 2); // boat direction and speed
     boat.push_back(- WIDTH - boatWidth); // boat x pos limit
     boats.push_back(boat);
 }
@@ -537,9 +540,9 @@ void boats_update() {
         load_boats();
     else {
         for (int i = 0; i < boats.size(); i++) {
-            if (boats[i][4] < 0) {
-                if (boats[i][0] > boats[i][5])
-                    boats[i][0]--;
+            if (boats[i][3] < 0) {
+                if (boats[i][0] > boats[i][4])
+                    boats[i][0] += boats[i][3];
                 else
                     boats.erase(boats.begin() + i);
             }
@@ -547,17 +550,32 @@ void boats_update() {
     }
 }
 
-void boats_display() {
+void boats_display(float yPos) {
     if (!boats.empty()) {
         for (int i = 0; i < boats.size(); i++) {
+            glColor3f(boatsTopColor[0], boatsTopColor[1], boatsTopColor[2]);
             glBegin(GL_POLYGON);
-            glColor3f(0.0f, 0.0f, 0.0f);
-            glVertex2f(boats[i][0], boats[i][1]);
-            glVertex2f(boats[i][0] + boats[i][2] / 4.0f, boats[i][1]);
-            glVertex2f(boats[i][0] + boats[i][2] / 4.0f, boats[i][1] + boats[i][3] / 4.0f);
-            glVertex2f(boats[i][0] + boats[i][2] / 3.0f, boats[i][1] + boats[i][3] / 4.0f);
-            glVertex2f(boats[i][0] + boats[i][2] / 3.0f, boats[i][1] + boats[i][3]);
-            glVertex2f(boats[i][0] + boats[i][2], boats[i][1] + boats[i][3]);
+            glVertex2f(boats[i][0], yPos);
+            glVertex2f(boats[i][0] + boats[i][1], yPos);
+            glVertex2f(boats[i][0] + (boats[i][1] - (boats[i][1] / 5.0f)), yPos - boats[i][2] / 2.0f);
+            glColor3f(boatsBaseColor[0], boatsBaseColor[1], boatsBaseColor[2]);
+            glVertex2f(boats[i][0] + (boats[i][1] / 5.0f), yPos - boats[i][2] / 2.0f);
+            glEnd();
+            glBegin(GL_POLYGON);
+            glColor3f(boatsTopColor[0], boatsTopColor[1], boatsTopColor[2]);
+            glVertex2f(boats[i][0] + (boats[i][1] / 6.0f), yPos);
+            glVertex2f(boats[i][0] + (boats[i][1] / 3.0f), yPos + boats[i][2] / 3.0f);
+            glVertex2f(boats[i][0] + boats[i][1] - (boats[i][1] / 4.0f), yPos + boats[i][2] / 3.0f);
+            glVertex2f(boats[i][0] + boats[i][1], yPos);
+            glEnd();
+            glBegin(GL_POLYGON);
+            glColor3f(boatsWindowColor[0], boatsWindowColor[1], boatsWindowColor[2]);
+            glVertex2f(boats[i][0] + (boats[i][1] / 6.0f) + 10, yPos);
+            glVertex2f(boats[i][0] + (boats[i][1] / 3.0f) + 10, yPos + boats[i][2] / 3.0f - 5);
+            glVertex2f(boats[i][0] + boats[i][1] - (boats[i][1] / 4.0f) - 10, yPos + boats[i][2] / 3.0f - 5);
+            glColor3f(boatsWindowColorShade[0], boatsWindowColorShade[1], boatsWindowColorShade[2]);
+            glVertex2f(boats[i][0] + boats[i][1] - 10, yPos);
+            glVertex2f(boats[i][0] + (boats[i][1] / 3.0f) + 10, yPos - 10);
             glEnd();
         }
     }
@@ -602,6 +620,9 @@ void ocean_update(int) {
 
 void ocean_waves_display() {
     for (int j = 0; j < 4; j++) {
+        if (j == 1) {
+            boats_display(((sinf(oceanWaveLengths[j]) * 100) - (oceanWaveOffsets * j)) / 7.0f - 100.0f);
+        }
         glBegin(GL_POLYGON);
         glColor3f(oceanColor[0], oceanColor[1], oceanColor[2]);
         glVertex2f(- WIDTH, -HEIGHT);
@@ -629,7 +650,7 @@ void ocean_display() {
     glVertex2f(oceanXpos, oceanYpos + oceanHeight);
     glEnd();
     ocean_waves_display();
-    boats_display();
+    //boats_display();
 }
 
 // ocean rocks
