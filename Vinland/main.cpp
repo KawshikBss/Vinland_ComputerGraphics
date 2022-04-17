@@ -18,11 +18,11 @@ void display();
 void reshape(int, int);
 
 // weather
-int weatherTImer = 0;
-bool clearWeather = true;
+float weatherTImer = 0;
+bool clearWeather = false;
 bool rainy = false;
 bool snow = false;
-bool rainedOnce = false;
+bool rainbow = true;
 
 // time
 int dayTimer = 0;
@@ -123,6 +123,7 @@ void sun_update(int) {
         if (sunYPos == HEIGHT){
             morning = false;
             evening = true;
+            weatherTImer += 0.2f;
         }
     }
     else if (evening) {
@@ -131,6 +132,7 @@ void sun_update(int) {
             evening = false;
             noon = true;
             dayTimer = 0;
+            weatherTImer += 0.2f;
         }
     }
     else if (noon) {
@@ -139,6 +141,7 @@ void sun_update(int) {
         if (sunYPos == 0) {
             noon = false;
             night = true;
+            weatherTImer += 0.2f;
         }
     }
 }
@@ -173,6 +176,7 @@ void moon_update(int) {
         if (moonYPos == HEIGHT - moonRadius) {
             night = false;
             midnight = true;
+            weatherTImer += 0.2f;
         }
     }
     else if (midnight) {
@@ -180,8 +184,8 @@ void moon_update(int) {
         if (nightTimer >= FPS * 5) {
             midnight = false;
             morning = true;
-            weatherTImer++;
             nightTimer = 0;
+            weatherTImer += 0.2f;
         }
     }
     else if (morning) {
@@ -519,15 +523,16 @@ void buildings_display() {
 
 // boats
 vector <vector <GLfloat > > boats;
-float boatWidth = 200.0f, boatHeight = 80.0f;
-GLfloat boatsBaseColor[3] = {0.31f, 0.62f, 0.7f};
-GLfloat boatsTopColor[3] = {0.6f, 0.0f, 0.0f};
+float boatWidth = 250.0f, boatHeight = 140.0f;
+GLfloat boatsBaseColor[3] = {0.0f, 0.0f, 0.0f};
+GLfloat boatsTopColor[3] = {1.0f, 1.0f, 1.0f};
+GLfloat boatsTopColorShade[3] = {0.6f, 0.6f, 0.6f};
 GLfloat boatsWindowColor[3] = {0.0f, 0.2f, 0.7f};
 GLfloat boatsWindowColorShade[3] = {0.49f, 0.97f, 1.0f};
 
-void load_boats() {
+void load_boats(float boatXpos) {
     vector <GLfloat> boat;
-    boat.push_back(WIDTH + boatWidth); // boat x pos
+    boat.push_back(boatXpos); // boat x pos
     boat.push_back(boatWidth); // boat width
     boat.push_back(boatHeight); // boat height
     boat.push_back(- 2); // boat direction and speed
@@ -537,7 +542,9 @@ void load_boats() {
 
 void boats_update() {
     if (boats.empty())
-        load_boats();
+        load_boats(WIDTH + boatWidth);
+    else if (boats.size() < 2)
+        load_boats(WIDTH * 1.5 + boatWidth);
     else {
         for (int i = 0; i < boats.size(); i++) {
             if (boats[i][3] < 0) {
@@ -550,34 +557,31 @@ void boats_update() {
     }
 }
 
-void boats_display(float yPos) {
-    if (!boats.empty()) {
-        for (int i = 0; i < boats.size(); i++) {
-            glColor3f(boatsTopColor[0], boatsTopColor[1], boatsTopColor[2]);
+void boats_display(float yPos, int i) {
+    if (!boats.empty() && boats.size() > i) {
             glBegin(GL_POLYGON);
+            glColor3f(boatsBaseColor[0], boatsBaseColor[1], boatsBaseColor[2]);
             glVertex2f(boats[i][0], yPos);
             glVertex2f(boats[i][0] + boats[i][1], yPos);
-            glVertex2f(boats[i][0] + (boats[i][1] - (boats[i][1] / 5.0f)), yPos - boats[i][2] / 2.0f);
+            glVertex2f(boats[i][0] + (boats[i][1] - (boats[i][1] / 5.0f)), yPos - boats[i][2] / 3.0f);
+            glVertex2f(boats[i][0] + (boats[i][1] / 5.0f), yPos - boats[i][2] / 3.0f);
+            glEnd();
+            glBegin(GL_POLYGON);
             glColor3f(boatsBaseColor[0], boatsBaseColor[1], boatsBaseColor[2]);
-            glVertex2f(boats[i][0] + (boats[i][1] / 5.0f), yPos - boats[i][2] / 2.0f);
+            glVertex2f(boats[i][0] + (boats[i][1] - (boats[i][1] / 2.0f)), yPos);
+            glVertex2f(boats[i][0] + (boats[i][1] - (boats[i][1] / 4.0f)), yPos + boats[i][2] * 1.5f);
+            glVertex2f(boats[i][0] + (boats[i][1] - (boats[i][1] / 4.2f)), yPos + boats[i][2] * 1.5f);
+            glVertex2f(boats[i][0] + (boats[i][1] - (boats[i][1] / 2.2f)), yPos);
             glEnd();
             glBegin(GL_POLYGON);
             glColor3f(boatsTopColor[0], boatsTopColor[1], boatsTopColor[2]);
-            glVertex2f(boats[i][0] + (boats[i][1] / 6.0f), yPos);
-            glVertex2f(boats[i][0] + (boats[i][1] / 3.0f), yPos + boats[i][2] / 3.0f);
-            glVertex2f(boats[i][0] + boats[i][1] - (boats[i][1] / 4.0f), yPos + boats[i][2] / 3.0f);
-            glVertex2f(boats[i][0] + boats[i][1], yPos);
+            glVertex2f(boats[i][0] + (boats[i][1] / 8.0f), yPos + boats[i][2] / 8.0f);
+            glVertex2f(boats[i][0] + (boats[i][1] - (boats[i][1] / 4.0f)), yPos + boats[i][2] * 1.5f);
+            glVertex2f(boats[i][0] + (boats[i][1] - (boats[i][1] / 4.2f)), yPos + boats[i][2] * 1.5f);
+            glColor3f(boatsTopColorShade[0], boatsTopColorShade[1], boatsTopColorShade[2]);
+            glVertex2f(boats[i][0] + (boats[i][1] - (boats[i][1] / 8.0f)), yPos + boats[i][2] / 4.0f);
+            glVertex2f(boats[i][0] + (boats[i][1] - (boats[i][1] / 8.0f)), yPos + boats[i][2] / 6.0f);
             glEnd();
-            glBegin(GL_POLYGON);
-            glColor3f(boatsWindowColor[0], boatsWindowColor[1], boatsWindowColor[2]);
-            glVertex2f(boats[i][0] + (boats[i][1] / 6.0f) + 10, yPos);
-            glVertex2f(boats[i][0] + (boats[i][1] / 3.0f) + 10, yPos + boats[i][2] / 3.0f - 5);
-            glVertex2f(boats[i][0] + boats[i][1] - (boats[i][1] / 4.0f) - 10, yPos + boats[i][2] / 3.0f - 5);
-            glColor3f(boatsWindowColorShade[0], boatsWindowColorShade[1], boatsWindowColorShade[2]);
-            glVertex2f(boats[i][0] + boats[i][1] - 10, yPos);
-            glVertex2f(boats[i][0] + (boats[i][1] / 3.0f) + 10, yPos - 10);
-            glEnd();
-        }
     }
 }
 
@@ -621,7 +625,10 @@ void ocean_update(int) {
 void ocean_waves_display() {
     for (int j = 0; j < 4; j++) {
         if (j == 1) {
-            boats_display(((sinf(oceanWaveLengths[j]) * 100) - (oceanWaveOffsets * j)) / 7.0f - 100.0f);
+            boats_display(((sinf(oceanWaveLengths[j]) * 100) - (oceanWaveOffsets * j)) / 7.0f - 100.0f, 0);
+        }
+        if (j == 2) {
+            boats_display(((sinf(oceanWaveLengths[j]) * 100) - (oceanWaveOffsets * j)) / 7.0f - 300.0f, 1);
         }
         glBegin(GL_POLYGON);
         glColor3f(oceanColor[0], oceanColor[1], oceanColor[2]);
@@ -678,6 +685,10 @@ GLfloat islandRadius = WIDTH / 1.5f;
 float islandSegments = 20.0f, islandAngle;
 GLfloat islandGrassColor[3] = {0.18f, 0.54f, 0.34f};
 GLfloat islandGrassColorShade[3] = {0.67f, 1.0f, 0.18f};
+GLfloat islandRockXpos = - WIDTH, islandRockYpos = - HEIGHT / 4.5f;
+float islandRockWidth = WIDTH / 2.0f;
+float islandRockSegments = 20.0f;
+float islandRockRad = 150.0f;
 
 void island_display() {
     glColor3f(0.8f, 0.3f, 0.2f);
@@ -704,6 +715,23 @@ void island_display() {
             glVertex2f((islandRadius * cosf(islandAngle) + islandCenterXpos), (islandRadius * sinf(islandAngle) + islandCenterYpos));
     }
     glVertex2f(- WIDTH, - HEIGHT);
+    glEnd();
+    int j = 0;
+    glBegin(GL_POLYGON);
+    glVertex2f(islandRockXpos, islandRockYpos - 150.0f);
+    glVertex2f(islandRockXpos, islandRockYpos);
+    for (int i = islandRockXpos; i <= islandRockXpos + islandRockWidth - 100; i += 30.0f) {
+        if (j % 5 == 0)
+            glVertex2f(i, islandRockYpos + islandRockRad / 2.0f);
+        else
+            glVertex2f(i, islandRockYpos + islandRockRad);
+        if (i < (islandRockXpos + islandRockWidth - 100) / 2)
+            glColor3f(islandGrassColorShade[0], islandGrassColorShade[1], islandGrassColorShade[2]);
+        j++;
+    }
+    glVertex2f(islandRockXpos + islandRockWidth - 40, islandRockYpos - 150.0f);
+    glVertex2f(islandRockXpos + islandRockWidth - 20.0f, islandRockYpos - 80.0f);
+    glVertex2f(islandRockXpos + islandRockWidth - 60.0f, islandRockYpos - 60.0f);
     glEnd();
 }
 
@@ -853,6 +881,18 @@ void tree_trunk_display() {
     glVertex2f(treePositions[treePositions.size() - 1][0] + treeTrunkTopWidth, treePositions[treePositions.size() - 1][1]);
     glVertex2f(treePositions[treePositions.size() - 1][0] - treeTrunkTopWidth, treePositions[treePositions.size() - 1][1]);
     glEnd();
+    glBegin(GL_POLYGON);
+    int j = 0;
+    for (int i = treePositions[0][0] - treeTrunkBotttomWidth - 10.0f; i < treePositions[0][0] + treeTrunkBotttomWidth + 10.0f; i += 2) {
+        if (j % 2 == 0)
+            glVertex2f(i, treePositions[0][1]);
+        else if (i % 3 == 0)
+            glVertex2f(i, treePositions[0][1] + 10.0f);
+        else
+            glVertex2f(i, treePositions[0][1] + 20.0f);
+        j++;
+    }
+    glEnd();
 }
 
 void tree_branch_display() {
@@ -957,6 +997,36 @@ void rain_display() {
     }
 }
 
+// rainbow
+GLfloat rainbowXpos = -WIDTH, rainbowYpos = 0.0f;
+float rainbowRad = 500.0f, rainbowWidth = 50.0f;
+int rainbowSegments = 0, rainbowSegmentsMax = 100;
+float rainbowAngle;
+GLfloat rainbowColor[3] = {0.0f, 0.0f, 0.0f};
+
+void rainbow_update() {
+    if (rainbow) {
+        if (rainbowSegments < rainbowSegmentsMax)
+            rainbowSegments++;
+    }
+}
+
+void rainbow_display() {
+    glBegin(GL_POLYGON);
+    glColor3f(1.0f, 0.0f, 0.0f);
+    for (int i = 0; i <= rainbowSegments / 3; i++) {
+        if (i > rainbowSegments / 6)
+            glColor3f(0.0f, 1.0f, 0.0f);
+        else
+            glColor3f(0.0f, 0.0f, 1.0f);
+        rainbowAngle = 2.0f * 3.141615f * i / rainbowSegmentsMax;
+        float xPos = rainbowXpos + (rainbowRad * cosf(rainbowAngle));
+        float yPos = rainbowYpos + (rainbowRad * sinf(rainbowAngle));
+        glVertex2f(xPos, yPos);
+    }
+    glEnd();
+}
+
 // clouds
 int cloudCount = 10;
 vector<vector<GLfloat> > clouds;
@@ -1056,20 +1126,25 @@ void cloud_display() {
 void weather_update(int) {
     glutPostRedisplay();
     glutTimerFunc(FPS, weather_update, 0);
-    if (weatherTImer >= 1) {
+    if (weatherTImer >= 0.8f) {
         clearWeather = false;
         rainy = true;
     }
     if (weatherTImer >= 2) {
-        clearWeather = true;
+        rainbow = true;
         rainy = false;
-        if (!rainedOnce)
-            rainedOnce = true;
+    }
+    if (weatherTImer >= 2.5) {
+        clearWeather = true;
+        rainbow = false;
         weatherTImer = 0;
     }
     if (rainy) {
         rain_update();
     }
+    /*if (rainbow) {
+        rainbow_update();
+    }*/
 }
 
 void weather_display() {
@@ -1106,6 +1181,10 @@ void display() {
     glLoadIdentity();
     glClearColor(0.0f, 1.0f, 1.0f, 1.0f);
     sky_display();
+    /*
+    if (rainbow)
+        rainbow_display();
+    */
     cloud_display();
     if (night || midnight)
         moon_display();
