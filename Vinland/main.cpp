@@ -683,7 +683,7 @@ void ocean_rocks_display() {
 }
 
 // island
-GLfloat islandCenterXpos = -WIDTH, islandCenterYpos = -HEIGHT;
+GLfloat islandCenterXpos = - WIDTH, islandCenterYpos = -HEIGHT;
 GLfloat islandRadius = WIDTH / 1.5f;
 float islandSegments = 20.0f, islandAngle;
 GLfloat islandGrassColor[3] = {0.08f, 0.54f, 0.14f};
@@ -692,6 +692,33 @@ GLfloat islandRockXpos = - WIDTH, islandRockYpos = - HEIGHT / 4.5f;
 float islandRockWidth = WIDTH / 2.0f;
 float islandRockSegments = 20.0f;
 float islandRockRad = 150.0f;
+
+void island_update(int) {
+    glutPostRedisplay();
+    glutTimerFunc(FPS, island_update, 0);
+    if (morning) {
+        if (islandGrassColor[1] < 0.54f)
+            islandGrassColor[1] += 0.1f;
+        if (islandGrassColor[2] < 0.14f)
+            islandGrassColor[2] += 0.1f;
+
+        if (islandGrassColorShade[0] < 0.47f)
+            islandGrassColorShade[0] += 0.1f;
+        if (islandGrassColorShade[1] < 1.0f)
+            islandGrassColorShade[1] += 0.1f;
+    }
+    if (noon && sunYPos <= HEIGHT / 2.0f) {
+        if (islandGrassColor[1] > 0.34f)
+            islandGrassColor[1] -= 0.1f;
+        if (islandGrassColor[2] > 0.04f)
+            islandGrassColor[2] -= 0.1f;
+
+        if (islandGrassColorShade[0] > 0.27f)
+            islandGrassColorShade[0] -= 0.1f;
+        if (islandGrassColorShade[1] > 0.4f)
+            islandGrassColorShade[1] -= 0.1f;
+    }
+}
 
 void island_display() {
     glColor3f(0.8f, 0.3f, 0.2f);
@@ -799,6 +826,17 @@ void tree_color_update(int) {
             treeColorShade[1] += 0.01f;
         if (treeColorShade[2] < 0.17f)
             treeColorShade[2] += 0.01f;
+
+        if (treeLeafColor[1] < 1.0f)
+            treeLeafColor[1] += 0.1f;
+        if (treeLeafColor[2] < 0.47f)
+            treeLeafColor[2] += 0.1f;
+        if (treeLeafColorShade[0] < 0.23f)
+            treeLeafColorShade[0] += 0.1f;
+        if (treeLeafColorShade[1] < 0.8f)
+            treeLeafColorShade[1] += 0.1f;
+        if (treeLeafColorShade[0] < 0.44f)
+            treeLeafColorShade[0] += 0.1f;
     }
     else if (noon && sunYPos <= HEIGHT / 2.0f) {
         if (treeColor[0] < 0.5f)
@@ -813,6 +851,17 @@ void tree_color_update(int) {
             treeColorShade[1] -= 0.01f;
         if (treeColorShade[2] > 0.16f)
             treeColorShade[2] -= 0.01f;
+
+        if (treeLeafColor[1] > 0.7f)
+            treeLeafColor[1] -= 0.1f;
+        if (treeLeafColor[2] > 0.27f)
+            treeLeafColor[2] -= 0.1f;
+        if (treeLeafColorShade[0] > 0.13f)
+            treeLeafColorShade[0] -= 0.1f;
+        if (treeLeafColorShade[1] > 0.6f)
+            treeLeafColorShade[1] -= 0.1f;
+        if (treeLeafColorShade[0] > 0.24f)
+            treeLeafColorShade[0] -= 0.1f;
     }
 }
 
@@ -1166,6 +1215,7 @@ void update() {
     glutTimerFunc(FPS, bridge_update, 0);
     glutTimerFunc(FPS, buildings_update, 0);
     glutTimerFunc(FPS, ocean_update, 0);
+    glutTimerFunc(FPS, island_update, 0);
     glutTimerFunc(FPS, tree_color_update, 0);
     glutTimerFunc(FPS, tree_update, 0);
     glutTimerFunc(FPS, weather_update, 0);
