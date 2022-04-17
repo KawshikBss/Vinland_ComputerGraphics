@@ -560,7 +560,10 @@ void boats_update() {
 void boats_display(float yPos, int i) {
     if (!boats.empty() && boats.size() > i) {
             glBegin(GL_POLYGON);
-            glColor3f(boatsBaseColor[0], boatsBaseColor[1], boatsBaseColor[2]);
+            if (i == 0)
+                glColor3f(boatsBaseColor[0], boatsBaseColor[1], boatsBaseColor[2]);
+            else
+                glColor3f(0.8f, 0.0f, 0.0f);
             glVertex2f(boats[i][0], yPos);
             glVertex2f(boats[i][0] + boats[i][1], yPos);
             glVertex2f(boats[i][0] + (boats[i][1] - (boats[i][1] / 5.0f)), yPos - boats[i][2] / 3.0f);
@@ -683,8 +686,8 @@ void ocean_rocks_display() {
 GLfloat islandCenterXpos = -WIDTH, islandCenterYpos = -HEIGHT;
 GLfloat islandRadius = WIDTH / 1.5f;
 float islandSegments = 20.0f, islandAngle;
-GLfloat islandGrassColor[3] = {0.18f, 0.54f, 0.34f};
-GLfloat islandGrassColorShade[3] = {0.67f, 1.0f, 0.18f};
+GLfloat islandGrassColor[3] = {0.08f, 0.54f, 0.14f};
+GLfloat islandGrassColorShade[3] = {0.47f, 1.0f, 0.08f};
 GLfloat islandRockXpos = - WIDTH, islandRockYpos = - HEIGHT / 4.5f;
 float islandRockWidth = WIDTH / 2.0f;
 float islandRockSegments = 20.0f;
@@ -720,18 +723,44 @@ void island_display() {
     glBegin(GL_POLYGON);
     glVertex2f(islandRockXpos, islandRockYpos - 150.0f);
     glVertex2f(islandRockXpos, islandRockYpos);
-    for (int i = islandRockXpos; i <= islandRockXpos + islandRockWidth - 100; i += 30.0f) {
+    for (int i = islandRockXpos; i <= islandRockXpos + islandRockWidth - 100; i += 30) {
         if (j % 5 == 0)
-            glVertex2f(i, islandRockYpos + islandRockRad / 2.0f);
+            glVertex2f(i, islandRockYpos + (islandRockRad + (10 * (j + 1))) / 2.0f);
         else
-            glVertex2f(i, islandRockYpos + islandRockRad);
+            glVertex2f(i, islandRockYpos + (islandRockRad + (10 * (j + 1))));
         if (i < (islandRockXpos + islandRockWidth - 100) / 2)
             glColor3f(islandGrassColorShade[0], islandGrassColorShade[1], islandGrassColorShade[2]);
         j++;
     }
     glVertex2f(islandRockXpos + islandRockWidth - 40, islandRockYpos - 150.0f);
-    glVertex2f(islandRockXpos + islandRockWidth - 20.0f, islandRockYpos - 80.0f);
-    glVertex2f(islandRockXpos + islandRockWidth - 60.0f, islandRockYpos - 60.0f);
+    j = 0;
+    for (int i = islandRockXpos + islandRockWidth - 100; i >= islandRockXpos; i -= 40.0f) {
+        if (j % 5 == 0)
+            glVertex2f(i, islandRockYpos + (islandRockRad + (10 * (j + 1))) / 2.0f);
+        else
+            glVertex2f(i, islandRockYpos + (islandRockRad + (10 * (j + 1))));
+        if (i < (islandRockXpos + islandRockWidth - 100) / 2)
+            glColor3f(islandGrassColorShade[0], islandGrassColorShade[1], islandGrassColorShade[2]);
+        j++;
+    }
+    glEnd();
+    glBegin(GL_POLYGON);
+    glVertex2f(islandRockXpos, islandRockYpos - 150);
+    j = 0;
+    for (int i = islandRockXpos; i <= islandRockXpos + islandRockWidth; i += 30) {
+        if (j % 2 == 0) {
+            glVertex2f(i, islandRockYpos - 110);
+            glVertex2f(i + 5.0f, islandRockYpos - 110);
+        }
+        else {
+            glVertex2f(i, islandRockYpos - 50);
+            glVertex2f(i + 5.0f, islandRockYpos - 130);
+        }
+        if (i < (islandRockXpos + islandRockWidth) / 2.0f)
+            glColor3f(islandGrassColor[0], islandGrassColor[1], islandGrassColor[2]);
+        j++;
+    }
+    glVertex2f(islandRockXpos + islandRockWidth, islandRockYpos - 150);
     glEnd();
 }
 
@@ -997,36 +1026,6 @@ void rain_display() {
     }
 }
 
-// rainbow
-GLfloat rainbowXpos = -WIDTH, rainbowYpos = 0.0f;
-float rainbowRad = 500.0f, rainbowWidth = 50.0f;
-int rainbowSegments = 0, rainbowSegmentsMax = 100;
-float rainbowAngle;
-GLfloat rainbowColor[3] = {0.0f, 0.0f, 0.0f};
-
-void rainbow_update() {
-    if (rainbow) {
-        if (rainbowSegments < rainbowSegmentsMax)
-            rainbowSegments++;
-    }
-}
-
-void rainbow_display() {
-    glBegin(GL_POLYGON);
-    glColor3f(1.0f, 0.0f, 0.0f);
-    for (int i = 0; i <= rainbowSegments / 3; i++) {
-        if (i > rainbowSegments / 6)
-            glColor3f(0.0f, 1.0f, 0.0f);
-        else
-            glColor3f(0.0f, 0.0f, 1.0f);
-        rainbowAngle = 2.0f * 3.141615f * i / rainbowSegmentsMax;
-        float xPos = rainbowXpos + (rainbowRad * cosf(rainbowAngle));
-        float yPos = rainbowYpos + (rainbowRad * sinf(rainbowAngle));
-        glVertex2f(xPos, yPos);
-    }
-    glEnd();
-}
-
 // clouds
 int cloudCount = 10;
 vector<vector<GLfloat> > clouds;
@@ -1142,9 +1141,6 @@ void weather_update(int) {
     if (rainy) {
         rain_update();
     }
-    /*if (rainbow) {
-        rainbow_update();
-    }*/
 }
 
 void weather_display() {
@@ -1176,15 +1172,33 @@ void update() {
     glutTimerFunc(FPS, cloud_update, 0);
 }
 
+void frame_display() {
+    glColor3f(0.0f, 0.0f, 0.0f);
+    glBegin(GL_POLYGON);
+    glVertex2f(- WIDTH, HEIGHT);
+    glVertex2f(- WIDTH, - HEIGHT);
+    glVertex2f(- WIDTH - 500.0f, - HEIGHT);
+    glVertex2f(- WIDTH - 500.0f, HEIGHT);
+    glEnd();
+    glBegin(GL_POLYGON);
+    glVertex2f(- WIDTH - 500.0f, - HEIGHT + 200.0f);
+    glVertex2f(WIDTH + 500.0f, - HEIGHT + 200.0f);
+    glVertex2f(WIDTH + 500.0f, - HEIGHT - 500.0f);
+    glVertex2f(- WIDTH - 500.0f, - HEIGHT - 500.0f);
+    glEnd();
+    glBegin(GL_POLYGON);
+    glVertex2f(WIDTH, HEIGHT);
+    glVertex2f(WIDTH + 500.0f, HEIGHT);
+    glVertex2f(WIDTH + 500.0f, - HEIGHT - 500.0f);
+    glVertex2f(WIDTH, - HEIGHT - 500.0f);
+    glEnd();
+}
+
 void display() {
     glClear(GL_COLOR_BUFFER_BIT);
     glLoadIdentity();
     glClearColor(0.0f, 1.0f, 1.0f, 1.0f);
     sky_display();
-    /*
-    if (rainbow)
-        rainbow_display();
-    */
     cloud_display();
     if (night || midnight)
         moon_display();
@@ -1197,6 +1211,7 @@ void display() {
     island_display();
     tree_display();
     weather_display();
+    frame_display();
     glFlush();
 }
 
