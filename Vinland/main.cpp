@@ -673,11 +673,43 @@ void ocean_rocks_display() {
 }
 
 // island
-GLfloat islandCenterXpos = -WIDTH, islandCenterYpos = -HEIGHT;
+// island
+GLfloat islandCenterXpos = - WIDTH, islandCenterYpos = -HEIGHT;
 GLfloat islandRadius = WIDTH / 1.5f;
 float islandSegments = 20.0f, islandAngle;
-GLfloat islandGrassColor[3] = {0.18f, 0.54f, 0.34f};
-GLfloat islandGrassColorShade[3] = {0.67f, 1.0f, 0.18f};
+GLfloat islandGrassColor[3] = {0.08f, 0.54f, 0.14f};
+GLfloat islandGrassColorShade[3] = {0.47f, 1.0f, 0.08f};
+GLfloat islandRockXpos = - WIDTH, islandRockYpos = - HEIGHT / 4.5f;
+float islandRockWidth = WIDTH / 2.0f;
+float islandRockSegments = 20.0f;
+float islandRockRad = 150.0f;
+
+void island_update(int) {
+    glutPostRedisplay();
+    glutTimerFunc(FPS, island_update, 0);
+    if (morning) {
+        if (islandGrassColor[1] < 0.54f)
+            islandGrassColor[1] += 0.1f;
+        if (islandGrassColor[2] < 0.14f)
+            islandGrassColor[2] += 0.1f;
+
+        if (islandGrassColorShade[0] < 0.47f)
+            islandGrassColorShade[0] += 0.1f;
+        if (islandGrassColorShade[1] < 1.0f)
+            islandGrassColorShade[1] += 0.1f;
+    }
+    if (noon && sunYPos <= HEIGHT / 2.0f) {
+        if (islandGrassColor[1] > 0.34f)
+            islandGrassColor[1] -= 0.1f;
+        if (islandGrassColor[2] > 0.04f)
+            islandGrassColor[2] -= 0.1f;
+
+        if (islandGrassColorShade[0] > 0.27f)
+            islandGrassColorShade[0] -= 0.1f;
+        if (islandGrassColorShade[1] > 0.4f)
+            islandGrassColorShade[1] -= 0.1f;
+    }
+}
 
 void island_display() {
     glColor3f(0.8f, 0.3f, 0.2f);
@@ -704,6 +736,49 @@ void island_display() {
             glVertex2f((islandRadius * cosf(islandAngle) + islandCenterXpos), (islandRadius * sinf(islandAngle) + islandCenterYpos));
     }
     glVertex2f(- WIDTH, - HEIGHT);
+    glEnd();
+    int j = 0;
+    glBegin(GL_POLYGON);
+    glVertex2f(islandRockXpos, islandRockYpos - 150.0f);
+    glVertex2f(islandRockXpos, islandRockYpos);
+    for (int i = islandRockXpos; i <= islandRockXpos + islandRockWidth - 100; i += 30) {
+        if (j % 5 == 0)
+            glVertex2f(i, islandRockYpos + (islandRockRad + (10 * (j + 1))) / 2.0f);
+        else
+            glVertex2f(i, islandRockYpos + (islandRockRad + (10 * (j + 1))));
+        if (i < (islandRockXpos + islandRockWidth - 100) / 2)
+            glColor3f(islandGrassColorShade[0], islandGrassColorShade[1], islandGrassColorShade[2]);
+        j++;
+    }
+    glVertex2f(islandRockXpos + islandRockWidth - 40, islandRockYpos - 150.0f);
+    j = 0;
+    for (int i = islandRockXpos + islandRockWidth - 100; i >= islandRockXpos; i -= 40.0f) {
+        if (j % 5 == 0)
+            glVertex2f(i, islandRockYpos + (islandRockRad + (10 * (j + 1))) / 2.0f);
+        else
+            glVertex2f(i, islandRockYpos + (islandRockRad + (10 * (j + 1))));
+        if (i < (islandRockXpos + islandRockWidth - 100) / 2)
+            glColor3f(islandGrassColorShade[0], islandGrassColorShade[1], islandGrassColorShade[2]);
+        j++;
+    }
+    glEnd();
+    glBegin(GL_POLYGON);
+    glVertex2f(islandRockXpos, islandRockYpos - 150);
+    j = 0;
+    for (int i = islandRockXpos; i <= islandRockXpos + islandRockWidth; i += 30) {
+        if (j % 2 == 0) {
+            glVertex2f(i, islandRockYpos - 110);
+            glVertex2f(i + 5.0f, islandRockYpos - 110);
+        }
+        else {
+            glVertex2f(i, islandRockYpos - 50);
+            glVertex2f(i + 5.0f, islandRockYpos - 130);
+        }
+        if (i < (islandRockXpos + islandRockWidth) / 2.0f)
+            glColor3f(islandGrassColor[0], islandGrassColor[1], islandGrassColor[2]);
+        j++;
+    }
+    glVertex2f(islandRockXpos + islandRockWidth, islandRockYpos - 150);
     glEnd();
 }
 
