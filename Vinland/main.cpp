@@ -527,8 +527,6 @@ float boatWidth = 250.0f, boatHeight = 140.0f;
 GLfloat boatsBaseColor[3] = {0.0f, 0.0f, 0.0f};
 GLfloat boatsTopColor[3] = {1.0f, 1.0f, 1.0f};
 GLfloat boatsTopColorShade[3] = {0.6f, 0.6f, 0.6f};
-GLfloat boatsWindowColor[3] = {0.0f, 0.2f, 0.7f};
-GLfloat boatsWindowColorShade[3] = {0.49f, 0.97f, 1.0f};
 
 void load_boats(float boatXpos) {
     vector <GLfloat> boat;
@@ -559,6 +557,7 @@ void boats_update() {
 
 void boats_display(float yPos, int i) {
     if (!boats.empty() && boats.size() > i) {
+            // boat base
             glBegin(GL_POLYGON);
             if (i == 0)
                 glColor3f(boatsBaseColor[0], boatsBaseColor[1], boatsBaseColor[2]);
@@ -569,6 +568,7 @@ void boats_display(float yPos, int i) {
             glVertex2f(boats[i][0] + (boats[i][1] - (boats[i][1] / 5.0f)), yPos - boats[i][2] / 3.0f);
             glVertex2f(boats[i][0] + (boats[i][1] / 5.0f), yPos - boats[i][2] / 3.0f);
             glEnd();
+            // boat pole
             glBegin(GL_POLYGON);
             glColor3f(boatsBaseColor[0], boatsBaseColor[1], boatsBaseColor[2]);
             glVertex2f(boats[i][0] + (boats[i][1] - (boats[i][1] / 2.0f)), yPos);
@@ -576,6 +576,7 @@ void boats_display(float yPos, int i) {
             glVertex2f(boats[i][0] + (boats[i][1] - (boats[i][1] / 4.2f)), yPos + boats[i][2] * 1.5f);
             glVertex2f(boats[i][0] + (boats[i][1] - (boats[i][1] / 2.2f)), yPos);
             glEnd();
+            // boat sails
             glBegin(GL_POLYGON);
             glColor3f(boatsTopColor[0], boatsTopColor[1], boatsTopColor[2]);
             glVertex2f(boats[i][0] + (boats[i][1] / 8.0f), yPos + boats[i][2] / 8.0f);
